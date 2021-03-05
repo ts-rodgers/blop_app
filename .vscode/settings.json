@@ -1,0 +1,10 @@
+{
+    "python.pythonPath": ".venv/bin/python3.8",
+    "python.linting.mypyEnabled": true,
+    "python.linting.mypyArgs": [
+        "--check-untyped-defs"
+    ],
+    "python.linting.enabled": true,
+    "python.formatting.provider": "black",
+    "editor.formatOnSave": true
+}
