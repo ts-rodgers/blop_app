@@ -35,5 +35,20 @@ def lint(fix_format: bool = False):
     lint_format(fix_format)
 
 
+@app.command()
+def test(coverage: bool = True, coverage_report: str = "term,html"):
+    args = ["pytest", "--doctest-modules"]
+
+    if coverage:
+        args.append(f"--cov=blog_app")
+
+        if coverage_report:
+            args.extend(
+                f"--cov-report={report}" for report in coverage_report.split(",")
+            )
+
+    subprocess.run(args)
+
+
 if __name__ == "__main__":
     app()
