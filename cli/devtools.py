@@ -1,5 +1,6 @@
 import subprocess
 
+import pytest
 import typer
 import uvicorn
 
