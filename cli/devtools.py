@@ -1,7 +1,10 @@
 import subprocess
-from pathlib import Path
 
 import typer
+import uvicorn
+
+from blog_app import _debug_app
+import blog_app
 
 app = typer.Typer()
 
@@ -48,6 +51,23 @@ def test(coverage: bool = True, coverage_report: str = "term,html"):
             )
 
     subprocess.run(args)
+
+
+@app.command()
+def server(host: str = "0.0.0.0", port: int = 8000):
+    uvicorn.run(
+        "blog_app:_debug_app",
+        host=host,
+        port=port,
+        log_level="info",
+        workers=1,
+        reload=True,
+    )
+
+
+@app.command()
+def debug(host: str = "0.0.0.0", port: int = 8000):
+    uvicorn.run(_debug_app, host=host, port=port, log_level="info")
 
 
 if __name__ == "__main__":

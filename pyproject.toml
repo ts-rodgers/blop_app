@@ -6,6 +6,7 @@ authors = ["Te-jé Rodgers <tjd.rodgers@gmail.com>"]
 
 [tool.poetry.dependencies]
 python = "^3.8"
+strawberry-graphql = "^0.48.1"
 
 [tool.poetry.dev-dependencies]
 pytest = "^6.2.2"
@@ -14,6 +15,7 @@ mypy = "^0.812"
 typer = "^0.3.2"
 pytest-cov = "^2.11.1"
 pytest-mock = "^3.5.1"
+uvicorn = {extras = ["standard"], version = "^0.13.4"}
 
 [tool.poetry.scripts]
 devtools = "cli.devtools:app"
