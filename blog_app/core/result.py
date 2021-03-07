@@ -31,12 +31,14 @@ from typing import (
     TypeVar,
     TypedDict,
     Union,
+    cast,
     overload,
 )
 
 
 ValueType = TypeVar("ValueType")
 ErrorType = TypeVar("ErrorType")
+MappedType = TypeVar("MappedType")
 
 
 class Result(Generic[ValueType, ErrorType]):
@@ -133,6 +135,85 @@ class Result(Generic[ValueType, ErrorType]):
         """
         return (self._value, None) if self.is_ok else (None, self._error)
 
+    def collapse(self) -> Union[ValueType, ErrorType]:
+        """
+        Retrieve the inner value of the result, whether failed or not.
+
+        >>> Result(value=10).collapse()
+        10
+        >>> Result(error="This is an error").collapse()
+        'This is an error'
+
+        This is useful in graphql resolvers which return either a success
+        value or a strongly-typed error. An example of such an resolver:
+
+        ```
+        union BookResult = Book | BookRetrievalError
+
+        type Query {
+            lastBook: BookResult
+        }
+        ```
+
+        ```
+        @strawberry.type
+        class Query:
+            @strawberry.field
+            async def last_book() -> Union[Book, BookRetrievalError]:
+                result: Result[Book, BookRetrievalError] = await some_operation()
+                return result.collapse()
+        ```
+
+        """
+        return self._value if self.is_ok else self._error
+
+    def map(
+        self, func: Callable[[ValueType], MappedType]
+    ) -> "Result[MappedType, ErrorType]":
+        """
+        Map from Result[T, E] to Result[U, E] by applying a function T -> U on
+        the inner "ok" value, leaving error value untouched.
+
+
+        >>> Result(value=10).map(str)
+        Result(value='10')
+        >>> Result(error=ValueError("Foo error")).map(int)
+        Result(error=ValueError('Foo error'))
+
+        """
+        return (
+            Result(value=func(self._value))
+            if self.is_ok
+            else cast(Result[MappedType, ErrorType], self)
+        )
+
+    def map_err(
+        self, func: Callable[[ErrorType], MappedType]
+    ) -> "Result[ValueType, MappedType]":
+        """
+        Map from Result[T, E] to Result[T, F] by applying a function E -> F on
+        an inner "error" value, leaving an "ok" value untouched.
+
+
+        >>> Result(value=10).map_err(str)
+        Result(value=10)
+        >>> Result(error=ValueError("Foo error")).map_err(str)
+        Result(error='Foo error')
+
+        """
+        return (
+            Result(error=func(self._error))
+            if self.is_failed
+            else cast(Result[ValueType, MappedType], self)
+        )
+
+    def __repr__(self):
+        return (
+            f"Result(value={repr(self._value)})"
+            if self.is_ok
+            else f"Result(error={repr(self._error)})"
+        )
+
     @property
     def is_ok(self) -> bool:
         """Return True if this result has a value, else False."""
@@ -148,3 +229,6 @@ class InvalidResult(TypeError):
     """Raised when attempting to operate on a `Result` that is not valid."""
 
     ...
+
+
+__all__ = ["Result", "InvalidResult"]
