@@ -1,7 +1,7 @@
 from typing import Protocol
 
 from blog_app.core.types import GraphQLResult
-from .types import AuthError, Authentication, LoginCodeTransport
+from .types import AuthError, Authorization, LoginCodeTransport
 
 
 class Authenticator(Protocol):
@@ -28,7 +28,7 @@ class Authenticator(Protocol):
 
     async def login_with_code(
         self, code: str, login: str, login_type: LoginCodeTransport
-    ) -> GraphQLResult[Authentication, AuthError]:
+    ) -> GraphQLResult[Authorization, AuthError]:
         """
         Verify a login code and return an Authentication.
 

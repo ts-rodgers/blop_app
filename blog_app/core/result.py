@@ -21,6 +21,8 @@ True
 (None, ValueError(...))
 """
 
+import inspect
+from dataclasses import dataclass
 from collections.abc import Awaitable
 from typing import (
     Callable,
@@ -37,6 +39,17 @@ from typing import (
 ValueType = TypeVar("ValueType")
 ErrorType = TypeVar("ErrorType")
 MappedType = TypeVar("MappedType")
+
+
+@dataclass
+class AwaitableValue(Generic[ValueType]):
+    value: ValueType
+
+    def __await__(self):
+        return self.get_value().__await__()
+
+    async def get_value(self):
+        return self.value
 
 
 class Result(Generic[ValueType, ErrorType]):
@@ -250,7 +263,10 @@ class Result(Generic[ValueType, ErrorType]):
         if self.is_ok:
             return func(self._value)
         else:
-            return cast(Result[MappedType, ErrorType], self)
+            result = cast(Result[MappedType, ErrorType], self)
+            return (
+                AwaitableValue(result) if inspect.iscoroutinefunction(func) else result
+            )
 
     def __repr__(self):
         return (

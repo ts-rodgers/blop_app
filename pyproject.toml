@@ -5,8 +5,11 @@ description = ""
 authors = ["Te-jé Rodgers <tjd.rodgers@gmail.com>"]
 
 [tool.poetry.dependencies]
-python = "^3.8"
+python = "^3.9"
 strawberry-graphql = "^0.48.1"
+auth0-python = "^3.14.0"
+typed-settings = "^0.9.2"
+PyJWT = "^1"
 
 [tool.poetry.dev-dependencies]
 pytest = "^6.2.2"
@@ -16,6 +19,8 @@ typer = "^0.3.2"
 pytest-cov = "^2.11.1"
 pytest-mock = "^3.5.1"
 uvicorn = {extras = ["standard"], version = "^0.13.4"}
+pytest-asyncio = "^0.14.0"
+requests-mock = "^1.8.0"
 
 [tool.poetry.scripts]
 devtools = "cli.devtools:app"
