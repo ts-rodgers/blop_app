@@ -21,15 +21,13 @@ True
 (None, ValueError(...))
 """
 
-from contextlib import contextmanager
+from collections.abc import Awaitable
 from typing import (
     Callable,
     Generic,
-    Optional,
     Tuple,
     Type,
     TypeVar,
-    TypedDict,
     Union,
     cast,
     overload,
@@ -206,6 +204,53 @@ class Result(Generic[ValueType, ErrorType]):
             if self.is_failed
             else cast(Result[ValueType, MappedType], self)
         )
+
+    @overload
+    def and_then(
+        self, func: Callable[[ValueType], Awaitable["Result[MappedType, ErrorType]"]]
+    ) -> Awaitable["Result[MappedType, ErrorType]"]:
+        ...
+
+    @overload
+    def and_then(
+        self, func: Callable[[ValueType], "Result[MappedType, ErrorType]"]
+    ) -> "Result[MappedType, ErrorType]":
+        ...
+
+    def and_then(
+        self,
+        func: Union[
+            Callable[[ValueType], "Result[MappedType, ErrorType]"],
+            Callable[[ValueType], Awaitable["Result[MappedType, ErrorType]"]],
+        ],
+    ) -> Union[
+        "Result[MappedType, ErrorType]", Awaitable["Result[MappedType, ErrorType]"]
+    ]:
+        """
+        Calls func if the result is "ok", otherwise return the errored result.
+
+        This function can be used to failable chain operations together:
+
+        >>> def sq(x: int) -> Result[int, str]:
+        ...     return Result(value=(x * x))
+
+        >>> def err(x: int) -> Result[int, str]:
+        ...     return Result(error=str(x))
+
+        >>> Result(value=2).and_then(sq).and_then(sq)
+        Result(value=16)
+        >>> Result(value=2).and_then(sq).and_then(err)
+        Result(error='4')
+        >>> Result(value=2).and_then(err).and_then(sq)
+        Result(error='2')
+        >>> Result(error='3').and_then(sq).and_then(sq)
+        Result(error='3')
+
+        """
+        if self.is_ok:
+            return func(self._value)
+        else:
+            return cast(Result[MappedType, ErrorType], self)
 
     def __repr__(self):
         return (
