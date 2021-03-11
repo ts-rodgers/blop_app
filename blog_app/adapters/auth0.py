@@ -12,7 +12,7 @@ from auth0.v3.authentication.token_verifier import (
     AsymmetricSignatureVerifier,
 )
 from auth0.v3.exceptions import Auth0Error, RateLimitError, TokenValidationError
-from typed_settings import settings
+from typed_settings import settings, secret
 
 from blog_app.auth.protocols import Authenticator
 from blog_app.auth.types import (
@@ -27,9 +27,9 @@ from blog_app.core.types import Result, GraphQLResult
 
 @settings
 class Auth0AuthenticatorSettings:
-    domain: str
-    client_id: str
-    client_secret: str
+    domain: str = ""
+    client_id: str = ""
+    client_secret: str = secret(default="")
 
 
 class Auth0Authenticator(Authenticator):
