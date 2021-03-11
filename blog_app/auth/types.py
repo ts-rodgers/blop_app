@@ -6,11 +6,13 @@ import strawberry
 from blog_app.core import GraphQLError
 
 
+@strawberry.enum
 class LoginCodeTransport(Enum):
     EMAIL = "email"
     SMS = "sms"
 
 
+@strawberry.enum
 class AuthErrorReason(Enum):
     TEMPORARY_FAILURE = "temporary_failure"
     INVALID_REQUEST = "invalid_request"

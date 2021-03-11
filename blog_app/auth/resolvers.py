@@ -1,3 +1,4 @@
+import logging
 from typing import Union, cast
 from strawberry.types import Info
 
@@ -26,6 +27,7 @@ async def send_login_code(
             email_address, LoginCodeTransport.EMAIL
         )
     except Exception:  # unexpected error which cannot be recovered
+        logging.exception("An internal application error has occurred.")
         return AuthError(
             reason=AuthErrorReason.INTERNAL_ERROR, message="Internal error."
         )

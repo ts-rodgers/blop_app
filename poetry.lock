@@ -429,7 +429,7 @@ full = ["aiofiles", "graphene", "itsdangerous", "jinja2", "python-multipart", "p
 
 [[package]]
 name = "strawberry-graphql"
-version = "0.48.1"
+version = "0.48.3"
 description = "A library for creating GraphQL APIs"
 category = "main"
 optional = false
@@ -578,10 +578,13 @@ category = "dev"
 optional = false
 python-versions = ">=3.6.1"
 
+[extras]
+test = ["starlette"]
+
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.9"
-content-hash = "7e83b754a9b418370d8f4e9e29decfeaf8943eb051cab27ef5a7f04ae891ce90"
+content-hash = "6faf5773ab9f6d8bbe2f62bb746a00a26311cb489500f60dc2852eaa9808ea4e"
 
 [metadata.files]
 appdirs = [
@@ -877,8 +880,8 @@ starlette = [
     {file = "starlette-0.14.2.tar.gz", hash = "sha256:7d49f4a27f8742262ef1470608c59ddbc66baf37c148e938c7038e6bc7a998aa"},
 ]
 strawberry-graphql = [
-    {file = "strawberry-graphql-0.48.1.tar.gz", hash = "sha256:1729b6375d0a3932b67d4b1d3346a7fcf7bca65f4d6adff79aaa18dd75a90112"},
-    {file = "strawberry_graphql-0.48.1-py3-none-any.whl", hash = "sha256:eb9a4800b1e6203db928142a351c5cdc5b0e6af34bc40a4abb093ad615d4ac4c"},
+    {file = "strawberry-graphql-0.48.3.tar.gz", hash = "sha256:e2b8bcf0136e3139e82ab091a74e831b1e685ed8652b6c5290c157dc48e8c581"},
+    {file = "strawberry_graphql-0.48.3-py3-none-any.whl", hash = "sha256:6bf1177749ef3f5efdd45004ae18a42872db8ce2abf82cd0ae9c00b25a4c6ab6"},
 ]
 toml = [
     {file = "toml-0.10.2-py2.py3-none-any.whl", hash = "sha256:806143ae5bfb6a3c6e736a764057db0e6a0e05e338b5630894a5f779cabb4f9b"},

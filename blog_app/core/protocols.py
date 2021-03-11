@@ -1,4 +1,4 @@
-from typing import Optional, Protocol, Union, runtime_checkable
+from typing import Protocol, Union, runtime_checkable
 
 from strawberry.asgi import Request, WebSocket
 
@@ -12,7 +12,7 @@ class AuthContext(Protocol):
 
 class AppContext(Protocol):
     request: AppRequest
-    auth: Optional[AuthContext] = None
+    auth: AuthContext
 
 
 __all__ = ["AppRequest", "AppContext", "AuthContext"]
