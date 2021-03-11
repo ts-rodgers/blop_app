@@ -67,7 +67,7 @@ class Result(Generic[ValueType, ErrorType]):
     True
     >>> Result(error="An error").is_ok
     False
-    >>> Result.wrap(ValueError, int, 10).is_ok
+    >>> Result.wrap(ValueError, int, "10").is_ok
     True
 
     """
@@ -79,6 +79,14 @@ class Result(Generic[ValueType, ErrorType]):
         """
         Wrap an operation with an expected exception and return a result.
 
+        >>> Result.wrap(ValueError, int, "10")
+        Result(value=10)
+        >>> Result.wrap(ValueError, int, "foo")
+        Result(error=ValueError(...))
+        >>> Result.wrap(TypeError, int, "foo")
+        Traceback (most recent call last):
+            ...
+        ValueError: invalid literal for int() with base 10: 'foo'
         """
         try:
             return Result(value=func(*args, **kwargs))

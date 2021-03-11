@@ -100,8 +100,11 @@ class Auth0Authenticator(Authenticator):
             )
         )
 
+        # this runs Result.wrap(Auth0Error, work) asyncronously
+        # (i.e. this thread won't block while the underlying IO is running)
+        # See doc tests in blog_app/core/result:Result.wrap
         result: Result[None, Auth0Error] = await asyncio.to_thread(
-            GraphQLResult.wrap, Auth0Error, work
+            Result.wrap, Auth0Error, work
         )
         return result.map_err(self._convert_auth0_error)
 
@@ -119,7 +122,7 @@ class Auth0Authenticator(Authenticator):
             "scope": self.AUTH_SCOPE,
         }
         result: Result[Any, Auth0Error] = await asyncio.to_thread(
-            GraphQLResult.wrap,
+            Result.wrap,
             Auth0Error,
             controller.post,
             f"https://{self.settings.domain}/oauth/token",
