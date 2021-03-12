@@ -3,7 +3,7 @@ from pytest_mock import MockerFixture
 import strawberry
 
 from blog_app.core import Result
-from blog_app.auth.types import Authorization, AuthErrorReason, AuthError, User
+from blog_app.auth.types import Authorization, AuthError, User
 from .conftest import GraphQLClient
 
 
@@ -120,10 +120,8 @@ def test_login_with_code(
 @pytest.mark.parametrize(
     "autherror",
     [
-        AuthError(
-            reason=AuthErrorReason.INVALID_REQUEST, message="Invalid request foo bar"
-        ),
-        AuthError(reason=AuthErrorReason.TEMPORARY_FAILURE, message="Try again later"),
+        AuthError.invalid_request("Invalid request foo bar"),
+        AuthError.temporary_failure("Try again later"),
     ],
 )
 def test_auth_mutations_auth_errors(

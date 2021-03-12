@@ -72,10 +72,7 @@ class Auth0Authenticator(Authenticator):
             return GraphQLResult(value=auth)
         except TokenValidationError:
             return GraphQLResult(
-                error=AuthError(
-                    reason=AuthErrorReason.INVALID_TOKEN,
-                    message="Token validation failed.",
-                )
+                error=AuthError.invalid_token("Token validation failed.")
             )
 
     async def send_login_code(
@@ -152,9 +149,4 @@ class Auth0Authenticator(Authenticator):
         try:
             return Result(value=await self.parse_id_token(token))
         except:
-            return Result(
-                error=AuthError(
-                    reason=AuthErrorReason.INVALID_TOKEN,
-                    message="The access token is invalid.",
-                )
-            )
+            return Result(error=AuthError.invalid_token("The access token is invalid."))

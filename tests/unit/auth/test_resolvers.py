@@ -50,11 +50,9 @@ async def test_send_login_code_calls_authenticator(
 @pytest.mark.parametrize(
     "error",
     [
-        AuthError(reason=AuthErrorReason.INTERNAL_ERROR, message="Something happened"),
-        AuthError(
-            reason=AuthErrorReason.TEMPORARY_FAILURE, message="Something happened"
-        ),
-        AuthError(reason=AuthErrorReason.INVALID_REQUEST, message="Something happened"),
+        AuthError.internal_error("Something happened"),
+        AuthError.temporary_failure("Something happened"),
+        AuthError.invalid_request("Something happened"),
     ],
 )
 @pytest.mark.parametrize("email", ["test@example.com"])
@@ -85,26 +83,10 @@ async def test_send_login_code_returns_auth_error_on_authenticator_exception(
 @pytest.mark.parametrize(
     "result",
     [
-        Result(
-            error=AuthError(
-                reason=AuthErrorReason.INTERNAL_ERROR, message="Something happened"
-            )
-        ),
-        Result(
-            error=AuthError(
-                reason=AuthErrorReason.TEMPORARY_FAILURE, message="Something happened"
-            )
-        ),
-        Result(
-            error=AuthError(
-                reason=AuthErrorReason.INVALID_REQUEST, message="Something happened"
-            )
-        ),
-        Result(
-            error=AuthError(
-                reason=AuthErrorReason.INVALID_TOKEN, message="Something happened"
-            )
-        ),
+        Result(error=AuthError.internal_error("Something happened")),
+        Result(error=AuthError.temporary_failure("Something happened")),
+        Result(error=AuthError.invalid_request("Something happened")),
+        Result(error=AuthError.invalid_token("Something happened")),
         Result(
             value=Authorization(
                 user=User(id=strawberry.ID("foo"), name="Someone's Name"),

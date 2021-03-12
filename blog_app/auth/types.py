@@ -18,6 +18,7 @@ class AuthErrorReason(Enum):
     INVALID_REQUEST = "invalid_request"
     INTERNAL_ERROR = "internal_error"
     INVALID_TOKEN = "token_validation_failed"
+    UNAUTHORIZED = "unauthorized"
 
 
 @strawberry.type
@@ -38,6 +39,26 @@ class AuthError(GraphQLError):
             if self.reason == AuthErrorReason.INTERNAL_ERROR
             else self.originalMessage
         )
+
+    @staticmethod
+    def temporary_failure(message: str) -> "AuthError":
+        return AuthError(reason=AuthErrorReason.TEMPORARY_FAILURE, message=message)
+
+    @staticmethod
+    def invalid_request(message: str) -> "AuthError":
+        return AuthError(reason=AuthErrorReason.INVALID_REQUEST, message=message)
+
+    @staticmethod
+    def internal_error(message: str = "Internal error.") -> "AuthError":
+        return AuthError(reason=AuthErrorReason.INTERNAL_ERROR, message=message)
+
+    @staticmethod
+    def invalid_token(message: str) -> "AuthError":
+        return AuthError(reason=AuthErrorReason.INVALID_TOKEN, message=message)
+
+    @staticmethod
+    def unauthorized(message: str) -> "AuthError":
+        return AuthError(reason=AuthErrorReason.UNAUTHORIZED, message=message)
 
 
 @strawberry.type

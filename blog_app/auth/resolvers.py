@@ -5,7 +5,6 @@ from strawberry.types import Info
 from blog_app.core import Result, AppContext, AppRequest
 from .types import (
     AuthError,
-    AuthErrorReason,
     Authorization,
     LoginCodeTransport,
     SendLoginCodeResponse,
@@ -28,9 +27,7 @@ async def send_login_code(
         )
     except Exception:  # unexpected error which cannot be recovered
         logging.exception("An internal application error has occurred.")
-        return AuthError(
-            reason=AuthErrorReason.INTERNAL_ERROR, message="Internal error."
-        )
+        return AuthError.internal_error()
     else:
         return result.map(
             lambda _: SendLoginCodeResponse(email_address=email_address)
@@ -47,6 +44,4 @@ async def login_with_code(
             )
         ).collapse()
     except Exception:  # unexpected error which cannot be recovered
-        return AuthError(
-            reason=AuthErrorReason.INTERNAL_ERROR, message="Internal error."
-        )
+        return AuthError.internal_error()
