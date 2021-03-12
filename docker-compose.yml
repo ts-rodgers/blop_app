@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: 1234
+      MYSQL_DATABASE: blog_app
+      MYSQL_USER: blog_app
+      MYSQL_PASSWORD: 5678
+    ports:
+      - "33067:3306"
+    volumes:
+      - "mysql:/var/lib/mysql"
+
+volumes:
+  mysql:
