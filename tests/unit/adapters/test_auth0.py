@@ -1,5 +1,8 @@
 from typing import Any, Callable, Dict, cast
+
+import jwt
 import pytest
+from auth0.v3.exceptions import TokenValidationError
 from requests import Request
 
 from blog_app.adapters.auth0 import Auth0Authenticator, Auth0AuthenticatorSettings
@@ -8,6 +11,7 @@ from blog_app.auth.types import (
     AuthErrorReason,
     Authorization,
     LoginCodeTransport,
+    User,
 )
 from blog_app.core import Result
 
@@ -229,7 +233,7 @@ async def test_verify_login_code_auth_error_on_forbidden(
     ],
 )
 @pytest.mark.asyncio
-async def test_verify_login_code_auth_error_on_invalid_id_token(
+async def test_login_with_code_auth_error_on_invalid_id_token(
     code: str,
     source: str,
     transport: LoginCodeTransport,
@@ -310,8 +314,58 @@ async def test_send_login_code_wraps_errors_in_results(
     assert err.reason == expected_reason
 
 
-{
-    "error": "unauthorized_client",
-    "error_description": "Grant type 'http://auth0.com/oauth/grant-type/passwordless/otp' not allowed for the client.",
-    "error_uri": "https://auth0.com/docs/clients/client-grant-types",
-}
+@pytest.mark.parametrize("user_id", [123456, "foo-id-283"])
+@pytest.mark.parametrize("name", ["Foo User"])
+@pytest.mark.asyncio
+async def test_get_verified_user_returns_user_props_from_id_token(
+    user_id, name, mocker, authenticator: Auth0Authenticator
+):
+    mocker.patch("auth0.v3.authentication.token_verifier.TokenVerifier.verify")
+    token = jwt.encode(
+        {"sub": user_id, "name": name}, "secret", algorithm="HS256"
+    ).decode("utf8")
+
+    result = (await authenticator.get_verified_user(token)).collapse()
+    assert isinstance(result, User)
+    assert result.id == str(user_id)
+    assert result.name == name
+
+
+@pytest.mark.parametrize("error", [TokenValidationError(), Exception()])
+@pytest.mark.parametrize("user_id", [123456, "foo-id-283"])
+@pytest.mark.parametrize("name", ["Foo User"])
+@pytest.mark.asyncio
+async def test_get_verified_user_returns_auth_error_on_invalid_token(
+    user_id, name, error, mocker, authenticator: Auth0Authenticator
+):
+    """
+    Check that get_verified_user() returns an auth error with INVALID_TOKEN
+    reason whenever token validation fails.
+    """
+    mocker.patch(
+        "auth0.v3.authentication.token_verifier.TokenVerifier.verify"
+    ).side_effect = error
+    token = jwt.encode(
+        {"sub": user_id, "name": name}, "secret", algorithm="HS256"
+    ).decode("utf8")
+
+    result = (await authenticator.get_verified_user(token)).collapse()
+    assert isinstance(result, AuthError)
+    assert result.reason == AuthErrorReason.INVALID_TOKEN
+
+
+@pytest.mark.parametrize("payload", [{"sub": "id-foo"}, {"name": "Tim Burton"}])
+@pytest.mark.asyncio
+async def test_get_verified_user_returns_auth_error_on_missing_field(
+    payload, mocker, authenticator: Auth0Authenticator
+):
+    """
+    Check that get_verified_user() returns an auth error with INVALID_TOKEN
+    reason whenever token has incomplete payload.
+    """
+    mocker.patch("auth0.v3.authentication.token_verifier.TokenVerifier.verify")
+    token = jwt.encode(payload, "secret", algorithm="HS256").decode("utf8")
+
+    result = (await authenticator.get_verified_user(token)).collapse()
+    assert isinstance(result, AuthError)
+    assert result.reason == AuthErrorReason.INVALID_TOKEN

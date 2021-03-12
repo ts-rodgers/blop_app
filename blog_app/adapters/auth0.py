@@ -12,6 +12,7 @@ from auth0.v3.authentication.token_verifier import (
     AsymmetricSignatureVerifier,
 )
 from auth0.v3.exceptions import Auth0Error, RateLimitError, TokenValidationError
+import strawberry
 from typed_settings import settings, secret
 
 from blog_app.auth.protocols import Authenticator
@@ -144,4 +145,16 @@ class Auth0Authenticator(Authenticator):
         await asyncio.to_thread(tv.verify, token)
         payload = jwt.decode(token, verify=False)
 
-        return User(id=payload["sub"], name=payload["name"])
+        return User(id=strawberry.ID(str(payload["sub"])), name=payload["name"])
+
+    async def get_verified_user(self, token: str) -> GraphQLResult[User, AuthError]:
+        """Get a verified user from the access token."""
+        try:
+            return Result(value=await self.parse_id_token(token))
+        except:
+            return Result(
+                error=AuthError(
+                    reason=AuthErrorReason.INVALID_TOKEN,
+                    message="The access token is invalid.",
+                )
+            )
