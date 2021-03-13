@@ -37,7 +37,7 @@ from typing import (
 
 
 ValueType = TypeVar("ValueType")
-ErrorType = TypeVar("ErrorType")
+ErrorType = TypeVar("ErrorType", covariant=True)
 MappedType = TypeVar("MappedType")
 
 

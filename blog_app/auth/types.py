@@ -3,7 +3,7 @@ from enum import Enum
 
 import strawberry
 
-from blog_app.core import GraphQLError
+from blog_app.core import AppError
 
 
 @strawberry.enum
@@ -22,7 +22,7 @@ class AuthErrorReason(Enum):
 
 
 @strawberry.type
-class AuthError(GraphQLError):
+class AuthError(AppError):
     reason: AuthErrorReason
     originalMessage: strawberry.Private[str]
 

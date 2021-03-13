@@ -31,8 +31,12 @@ class MockInfo:
 
 
 @pytest.fixture
-def info(authenticator):
-    return MockInfo(context=MockAppContext(Context(authenticator=authenticator)))
+def info(authenticator, mocker):
+    return MockInfo(
+        context=MockAppContext(
+            Context(authenticator=authenticator, request=mocker.Mock())
+        )
+    )
 
 
 @pytest.mark.parametrize("email", ["test@example.com"])

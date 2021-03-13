@@ -6,13 +6,13 @@ from .result import Result
 
 
 @strawberry.interface
-class GraphQLError:
+class AppError:
     message: str
 
 
-GraphQLErrorType = TypeVar("GraphQLErrorType", bound=GraphQLError)
+GraphQLErrorType = TypeVar("GraphQLErrorType", bound=AppError)
 ValueType = TypeVar("ValueType")
 GraphQLResult = Result[ValueType, GraphQLErrorType]
 
 
-__all__ = ["GraphQLError", "GraphQLResult"]
+__all__ = ["AppError", "GraphQLResult"]
