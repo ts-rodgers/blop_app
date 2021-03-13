@@ -9,7 +9,7 @@ services:
       MYSQL_USER: blog_app
       MYSQL_PASSWORD: 5678
     ports:
-      - "33067:3306"
+      - "3306:3306"
     volumes:
       - "mysql:/var/lib/mysql"
 
