@@ -50,7 +50,7 @@ class Authenticator(Protocol):
 
         The method MUST first verify the access token using the authenticator's
         backend. If an invalid token is provided, then
-        Result(error=AuthError(reason=AuthErrorReason.INVALID_TOKEN, message=...))
+        Result(error=AuthError.invalid_token(message=...))
         MUST be returned.
 
         :param token: the access token that should be verified. It will have been
