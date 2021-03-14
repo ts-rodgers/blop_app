@@ -20,4 +20,4 @@ class Context:
 
 async def build_post_context(engine: Any, table_map: ModelMap) -> PostContext:
     loader = Loader(constructor=Post, engine=engine, table=table_map["post"])
-    return Context(loader=loader)  # type: ignore
+    return Context(loader=loader)

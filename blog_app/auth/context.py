@@ -13,10 +13,9 @@ class Context:
     authenticator: Authenticator
     request: AppRequest
 
-    async def get_logged_in_user_id(self) -> Result[str, AuthError]:
+    async def get_logged_in_user(self) -> Result[User, AuthError]:
         token_result = extract_auth_token(self.request)
-        user_result = await token_result.and_then(self.authenticator.get_verified_user)
-        return user_result.and_then(lambda user: str(user.id))  # type: ignore
+        return await token_result.and_then(self.authenticator.get_verified_user)
 
 
 async def build_auth_context(
