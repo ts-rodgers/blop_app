@@ -15,10 +15,10 @@ class Context(AppContext):
 
 
 async def build_context(
-    request: AppRequest, authenticator: Authenticator, engine: Any, table_map: ModelMap
+    request: AppRequest, authenticator: Authenticator, model_map: ModelMap
 ):
     return Context(
         request=request,
         auth=await build_auth_context(authenticator, request),
-        posts=await build_post_context(engine, table_map),
+        posts=await build_post_context(model_map),
     )

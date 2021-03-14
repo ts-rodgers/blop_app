@@ -2,10 +2,10 @@ from io import StringIO
 from typing import Any
 
 import pytest
-from sqlalchemy.schema import MetaData, Table
+from sqlalchemy.schema import MetaData
 from sqlalchemy.engine import create_engine
 
-from blog_app.core.model import ModelMap, register_tables
+from blog_app.core.model import ModelHelper, register_tables
 
 
 @pytest.fixture
@@ -35,7 +35,7 @@ def test_register_tables_returns_model_map(metadata, expected_table_names):
     # check that it returns a dict of all the models
     assert isinstance(model_map, dict)
     assert model_map.keys() == expected_table_names
-    assert all(isinstance(item, Table) for item in model_map.values())
+    assert all(isinstance(item, ModelHelper) for item in model_map.values())
 
 
 def test_register_tables_adds_tables_to_metadata(

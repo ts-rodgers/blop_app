@@ -10,7 +10,7 @@ from .adapters.auth0 import Auth0Authenticator
 from .auth.resolvers import send_login_code, login_with_code
 from .posts.resolvers import get_posts
 from .context import build_context
-from .database import create_database_helpers
+from .database import create_model_map
 from .settings import load, Settings
 
 
@@ -36,7 +36,7 @@ class BlogApp(GraphQL):
         super().__init__(**kwargs)
 
         self.settings = load()
-        self.db_helpers = create_database_helpers(self.settings.database)
+        self.model_map = create_model_map(self.settings.database)
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send):
         if scope["type"] == "lifespan":
@@ -65,8 +65,7 @@ class BlogApp(GraphQL):
         return await build_context(
             request=request,
             authenticator=authenticator,
-            engine=self.db_helpers.engine,
-            table_map=self.db_helpers.table_map,
+            model_map=self.model_map,
         )
 
     async def process_result(

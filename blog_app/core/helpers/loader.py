@@ -14,9 +14,9 @@ from typing import (
     overload,
 )
 
-from sqlalchemy.schema import Table
-from sqlalchemy.sql.visitors import Visitable
 from strawberry.dataloader import DataLoader
+
+from blog_app.core.model import ModelHelper
 
 
 class Identifyable(Protocol):
@@ -30,37 +30,26 @@ class Loader(Generic[LoaderType]):
     def __init__(
         self,
         constructor: Callable[..., LoaderType],
-        engine: Any,
-        table: Table,
+        model: ModelHelper,
     ):
         self.constructor = constructor
-        self.engine = engine
-        self.table = table
+        self.model = model
         self.dataloader = DataLoader(self._dataloader_fn)
 
-    async def all(self, where_clause: Union[str, bool, Visitable] = None):
-        async with self.engine.connect() as conn:
-            cursor = await conn.execute(
-                self.table.select().where(where_clause)
-                if where_clause
-                else self.table.select()
-            )
+    async def all(self):
+        for row in await self.model.load_all():
+            yield self.constructor(**row._asdict())
 
-            for row in cursor.fetchall():
-                yield self.constructor(**row._asdict())
+    async def _dataloader_fn(self, keys: List[int]) -> List[Optional[LoaderType]]:
+        return list(
+            Loader.fillBy(keys, await self.model.load_by_id(keys), lambda row: row.id)
+        )
 
     async def load(self, key: int) -> Optional[LoaderType]:
         return await self.dataloader.load(key)
 
     async def load_many(self, keys: List[int]) -> Sequence[Optional[LoaderType]]:
         return await asyncio.gather(*(self.load(key) for key in keys))
-
-    async def _dataloader_fn(self, keys: List[int]) -> List[Optional[LoaderType]]:
-        async with self.engine.connect() as conn:
-            cursor = await conn.execute(
-                self.table.select().where(self.table.c.id.in_(keys))
-            )
-            return list(Loader.fillBy(keys, cursor.fetchall(), lambda row: row.id))
 
     K = TypeVar("K", bound=Hashable)
     V = TypeVar("V")

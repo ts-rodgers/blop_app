@@ -15,15 +15,9 @@ class DatabaseSettings:
     echo_statements: bool = True
 
 
-class DatabaseHelpers(NamedTuple):
-    engine: Any
-    table_map: ModelMap
-
-
-def create_database_helpers(settings: DatabaseSettings) -> DatabaseHelpers:
+def create_model_map(settings: DatabaseSettings) -> ModelMap:
     """Create an asyncronous db engine from the database settings."""
     engine = create_async_engine(settings.connection_url, echo=settings.echo_statements)
     metadata = MetaData()
     metadata.bind = engine
-    table_map = register_tables(metadata=metadata)
-    return DatabaseHelpers(engine=engine, table_map=table_map)
+    return register_tables(metadata=metadata)

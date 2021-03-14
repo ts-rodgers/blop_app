@@ -16,6 +16,6 @@ def register(metadata: MetaData):
             "last_updated",
             TIMESTAMP,
             nullable=False,
-            server_default=func.text("CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP"),
+            server_default=text("CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP"),
         ),
     )

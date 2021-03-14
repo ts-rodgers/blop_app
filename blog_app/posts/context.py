@@ -18,6 +18,6 @@ class Context:
         return self.loader.dataloader
 
 
-async def build_post_context(engine: Any, table_map: ModelMap) -> PostContext:
-    loader = Loader(constructor=Post, engine=engine, table=table_map["post"])
+async def build_post_context(model_map: ModelMap) -> PostContext:
+    loader = Loader(constructor=Post, model=model_map["post"])
     return Context(loader=loader)
