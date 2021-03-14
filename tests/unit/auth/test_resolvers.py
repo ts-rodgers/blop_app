@@ -4,6 +4,7 @@ from dataclasses import dataclass
 import pytest
 import strawberry
 from strawberry.types import Info
+from strawberry.dataloader import DataLoader
 
 from blog_app.auth.types import (
     AuthError,
@@ -35,7 +36,11 @@ class MockInfo:
 def info(authenticator, mocker):
     return MockInfo(
         context=MockAppContext(
-            auth=Context(authenticator=authenticator, request=mocker.Mock(AppRequest)),
+            auth=Context(
+                authenticator=authenticator,
+                request=mocker.Mock(AppRequest),
+                users=mocker.Mock(DataLoader),
+            ),
             posts=mocker.Mock(PostContext),
             request=mocker.Mock(AppRequest),
         )

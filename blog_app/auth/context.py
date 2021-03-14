@@ -1,5 +1,8 @@
 from dataclasses import dataclass
-from typing import Callable
+from typing import Optional
+import strawberry
+
+from strawberry.dataloader import DataLoader
 
 from blog_app.core.result import Result
 from blog_app.core.protocols import AppRequest, AuthContext
@@ -12,6 +15,7 @@ from .types import AuthError, User
 class Context:
     authenticator: Authenticator
     request: AppRequest
+    users: DataLoader[strawberry.ID, Optional[User]]
 
     async def get_logged_in_user(self) -> Result[User, AuthError]:
         token_result = extract_auth_token(self.request)
@@ -21,4 +25,7 @@ class Context:
 async def build_auth_context(
     authenticator: Authenticator, request: AppRequest
 ) -> AuthContext:
-    return Context(authenticator=authenticator, request=request)
+    users_dataldr = DataLoader[strawberry.ID, Optional[User]](
+        lambda ids: authenticator.get_users_by_ids([str(id) for id in ids])
+    )
+    return Context(authenticator=authenticator, request=request, users=users_dataldr)

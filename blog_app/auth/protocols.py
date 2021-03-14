@@ -1,4 +1,4 @@
-from typing import Protocol
+from typing import List, Optional, Protocol
 
 from blog_app.core.types import GraphQLResult
 from .types import AuthError, Authorization, LoginCodeTransport, User
@@ -57,6 +57,11 @@ class Authenticator(Protocol):
                       issued from the `login_with_code()` method on this authenticator.
         :returns: A `Result[User, AuthError]` that encodes the result of the
                   operation
+        """
+
+    async def get_users_by_ids(self, ids: List[str]) -> List[Optional[User]]:
+        """
+        Batch query users by id
         """
 
 

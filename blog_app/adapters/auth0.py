@@ -2,11 +2,12 @@ import asyncio
 
 from datetime import datetime
 from functools import partial
-from typing import Any
+from typing import Any, List, Optional
 
 
 import jwt
 from auth0.v3.authentication import GetToken, Passwordless
+from auth0.v3.management import Auth0
 from auth0.v3.authentication.token_verifier import (
     TokenVerifier,
     AsymmetricSignatureVerifier,
@@ -23,6 +24,7 @@ from blog_app.auth.types import (
     LoginCodeTransport,
     User,
 )
+from blog_app.core.helpers import Loader
 from blog_app.core.types import Result, GraphQLResult
 
 
@@ -31,6 +33,7 @@ class Auth0AuthenticatorSettings:
     domain: str = ""
     client_id: str = ""
     client_secret: str = secret(default="")
+    management_api_token: str = ""
 
 
 class Auth0Authenticator(Authenticator):
@@ -41,6 +44,7 @@ class Auth0Authenticator(Authenticator):
         self.signature_verifier = AsymmetricSignatureVerifier(
             f"https://{settings.domain}/.well-known/jwks.json"
         )
+        self.management_token_fetcher = ManagementAPITokenFetcher(settings)
 
     def _convert_auth0_error(self, err: Auth0Error) -> AuthError:
         reason = AuthErrorReason.INVALID_REQUEST
@@ -150,3 +154,27 @@ class Auth0Authenticator(Authenticator):
             return Result(value=await self.parse_id_token(token))
         except:
             return Result(error=AuthError.invalid_token("The access token is invalid."))
+
+    async def get_users_by_ids(self, ids: List[str]) -> List[Optional[User]]:
+        """Return a list of users from auth0 api."""
+        auth0 = Auth0(
+            self.settings.domain, await self.management_token_fetcher.get_token()
+        )
+        id_repr = lambda user_id: f'"{user_id}"'
+        q = "user_id:{}".format(" OR ".join(id_repr(user_id) for user_id in ids))
+        users_structs = await asyncio.to_thread(auth0.users.list, q=q)
+
+        return [
+            User(id=struct["user_id"], name=struct["name"])
+            for struct in Loader.fillBy(
+                ids, users_structs["users"], lambda s: s["user_id"]
+            )
+        ]
+
+
+class ManagementAPITokenFetcher:
+    def __init__(self, settings: Auth0AuthenticatorSettings):
+        self.settings = settings
+
+    async def get_token(self) -> str:
+        return self.settings.management_api_token

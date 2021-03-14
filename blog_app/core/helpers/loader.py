@@ -2,6 +2,7 @@ import asyncio
 from typing import (
     Any,
     Callable,
+    Generator,
     Generic,
     Hashable,
     List,
@@ -10,6 +11,7 @@ from typing import (
     Sequence,
     TypeVar,
     Union,
+    overload,
 )
 
 from sqlalchemy.schema import Table
@@ -22,7 +24,6 @@ class Identifyable(Protocol):
 
 
 LoaderType = TypeVar("LoaderType", covariant=True)
-RowItemType = TypeVar("RowItemType", bound=Identifyable)
 
 
 class Loader(Generic[LoaderType]):
@@ -59,11 +60,14 @@ class Loader(Generic[LoaderType]):
             cursor = await conn.execute(
                 self.table.select().where(self.table.c.id.in_(keys))
             )
-            return list(self.fillBy(keys, cursor.fetchall()))
+            return list(Loader.fillBy(keys, cursor.fetchall(), lambda row: row.id))
+
+    K = TypeVar("K", bound=Hashable)
+    V = TypeVar("V")
 
     @staticmethod
-    def fillBy(keys: Sequence[Hashable], items: Sequence[RowItemType]):
-        mapped = {item.id: item for item in items}
+    def fillBy(keys: Sequence[K], items: Sequence[V], key_fn: Callable[[V], K]):
+        mapped = {key_fn(item): item for item in items}
         return (mapped.get(key) for key in keys)
 
 
