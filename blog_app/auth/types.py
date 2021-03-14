@@ -1,4 +1,4 @@
-from blog_app.core.protocols import AppUser
+from blog_app.core.protocols import Person
 from datetime import datetime
 from enum import Enum
 
@@ -63,13 +63,9 @@ class AuthError(AppError):
 
 
 @strawberry.type
-class User:
+class User(Person):
     id: strawberry.ID
     name: str
-
-    @classmethod
-    def marshal(cls, u: AppUser) -> "User":
-        return u if isinstance(u, cls) else cls(id=u.id, name="<unknown user>")
 
 
 @strawberry.type

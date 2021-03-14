@@ -4,8 +4,7 @@ from datetime import datetime
 import strawberry
 from strawberry.types import Info
 
-from blog_app.core import AppContext, AppRequest
-from blog_app.auth import User
+from blog_app.core import AppContext, AppRequest, Person
 
 
 @strawberry.type
@@ -18,9 +17,10 @@ class Post:
     updated: datetime
 
     @strawberry.field()
-    async def author(self, info: Info[AppContext, AppRequest]) -> Optional[User]:
-        app_user = await info.context.auth.users.load(self.author_id)
-        return User.marshal(app_user) if app_user else None
+    async def author(self, info: Info[AppContext, AppRequest]) -> Person:
+        # ignore type error because we don't expect this to resolve
+        # null; this should trigger a low-level gql error instead.
+        return await info.context.auth.users.load(self.author_id)  # type: ignore
 
 
 @strawberry.type

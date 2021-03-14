@@ -30,8 +30,9 @@ class Dataloader(Protocol[KeyType, LoaderType]):
 
 
 @strawberry.interface
-class AppUser(Protocol):
+class Person:
     id: strawberry.ID
+    name: str
 
 
 @strawberry.interface
@@ -42,10 +43,10 @@ class AppPost(Protocol):
 @runtime_checkable
 class AuthContext(Protocol):
     @property
-    def users(self) -> Dataloader[strawberry.ID, Optional[AppUser]]:
+    def users(self) -> Dataloader[strawberry.ID, Optional[Person]]:
         ...
 
-    async def get_logged_in_user(self) -> Result[AppUser, AppError]:
+    async def get_logged_in_user(self) -> Result[Person, AppError]:
         ...
 
 
@@ -62,4 +63,4 @@ class AppContext(Protocol):
     posts: PostContext
 
 
-__all__ = ["AppRequest", "AppContext", "AuthContext", "AppUser", "AppPost"]
+__all__ = ["AppRequest", "AppContext", "AuthContext", "Person", "AppPost"]

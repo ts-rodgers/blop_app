@@ -5,8 +5,8 @@ from strawberry.types import Info
 
 from blog_app.core import AppContext, AppRequest
 from blog_app.core.helpers import Collection
-from .types import Post
 from .context import Context
+from .types import Post
 
 
 def get_loader(info: Info[AppContext, AppRequest]):
