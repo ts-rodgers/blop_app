@@ -35,8 +35,8 @@ class Person:
     name: str
 
 
-@strawberry.interface
-class AppPost(Protocol):
+@strawberry.interface(name="Post")
+class AppPost:
     id: int
 
 

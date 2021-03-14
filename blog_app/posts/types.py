@@ -4,11 +4,11 @@ from datetime import datetime
 import strawberry
 from strawberry.types import Info
 
-from blog_app.core import AppContext, AppRequest, Person
+from blog_app.core import AppContext, AppRequest, Person, AppPost
 
 
-@strawberry.type
-class Post:
+@strawberry.type(name="Post_")
+class Post(AppPost):
     id: int
     author_id: strawberry.ID
     title: str
