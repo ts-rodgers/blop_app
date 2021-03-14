@@ -1,5 +1,6 @@
 import logging
 from typing import Any, List, Optional
+from starlette.types import Receive, Scope, Send
 
 import strawberry
 from strawberry.asgi import GraphQL, ExecutionResult, GraphQLHTTPResponse
@@ -36,6 +37,26 @@ class BlogApp(GraphQL):
 
         self.settings = load()
         self.db_helpers = create_database_helpers(self.settings.database)
+
+    async def __call__(self, scope: Scope, receive: Receive, send: Send):
+        if scope["type"] == "lifespan":
+            while True:
+                message = await receive()
+                if message["type"] == "lifespan.startup":
+                    await self.startup()
+                    await send({"type": "lifespan.startup.complete"})
+                elif message["type"] == "lifespan.shutdown":
+                    await self.shutdown()
+                    await send({"type": "lifespan.shutdown.complete"})
+                    return
+        else:
+            await super().__call__(scope, receive, send)
+
+    async def startup(self):
+        ...
+
+    async def shutdown(self):
+        ...
 
     async def get_context(
         self, request: AppRequest, response: Optional[Any] = None
