@@ -1,3 +1,4 @@
+import asyncio
 from typing import (
     Any,
     Callable,
@@ -49,6 +50,9 @@ class Loader(Generic[LoaderType]):
 
     async def load(self, key: int) -> Optional[LoaderType]:
         return await self.dataloader.load(key)
+
+    async def load_many(self, keys: List[int]) -> Sequence[Optional[LoaderType]]:
+        return await asyncio.gather(*(self.load(key) for key in keys))
 
     async def _dataloader_fn(self, keys: List[int]) -> List[Optional[LoaderType]]:
         async with self.engine.connect() as conn:

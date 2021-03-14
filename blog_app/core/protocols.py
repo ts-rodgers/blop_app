@@ -1,8 +1,8 @@
-from typing import Protocol, Union, runtime_checkable
+from typing import Optional, Protocol, Union, runtime_checkable
 
 from strawberry.asgi import Request, WebSocket
+from strawberry.dataloader import DataLoader
 
-from blog_app.core.loader import Loader
 from blog_app.core.result import Result
 from blog_app.core.types import AppError
 
@@ -38,7 +38,7 @@ class AuthContext(Protocol):
 
 @runtime_checkable
 class PostContext(Protocol):
-    loader: Loader[AppPost]
+    dataloader: DataLoader[int, Optional[AppPost]]
 
 
 class AppContext(Protocol):

@@ -1,14 +1,11 @@
-import asyncio
-
-import strawberry
-from blog_app.core.types import AppError
-from typing import List, Optional, Union, NewType, cast
+from typing import cast
 
 
 from strawberry.types import Info
 
-from blog_app.core import Result, AppContext, AppRequest
-from .types import Post, PostRetrievalError
+from blog_app.core import AppContext, AppRequest
+from blog_app.core.helpers import Collection
+from .types import Post
 from .context import Context
 
 
@@ -18,16 +15,9 @@ def get_loader(info: Info[AppContext, AppRequest]):
     return cast(Context, info.context.posts).loader
 
 
-async def get_posts(
-    info: Info[AppContext, AppRequest],
-    *,
-    ids: Optional[List[int]] = None,
-) -> List[Post]:
+async def get_posts(info: Info[AppContext, AppRequest]) -> Collection[Post]:
     loader = get_loader(info)
-    if ids:
-        results = await asyncio.gather(*(loader.load(id) for id in ids))
-        return [post for post in results if post is not None]
-    return [x async for x in loader.all()]
+    return Collection(loader=loader)
 
 
 __all__ = ["get_posts"]

@@ -1,7 +1,9 @@
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, Optional
 
-from blog_app.core import Loader
+from strawberry.dataloader import DataLoader
+
+from blog_app.core.helpers import Loader
 from blog_app.core.model import ModelMap
 from blog_app.core.protocols import AppRequest, PostContext
 from .types import Post
@@ -10,6 +12,10 @@ from .types import Post
 @dataclass
 class Context:
     loader: Loader[Post]
+
+    @property
+    def dataloader(self) -> DataLoader[int, Optional[Post]]:
+        return self.loader.dataloader
 
 
 async def build_post_context(engine: Any, table_map: ModelMap) -> PostContext:

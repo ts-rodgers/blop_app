@@ -1,11 +1,10 @@
 import logging
-from blog_app.posts.types import Post
-from typing import Any, List, Optional, Union
+from typing import Any, List, Optional
 
 import strawberry
 from strawberry.asgi import GraphQL, ExecutionResult, GraphQLHTTPResponse
 
-from .core import AppRequest, AppError
+from .core import AppRequest
 from .adapters.auth0 import Auth0Authenticator
 from .auth.resolvers import send_login_code, login_with_code
 from .posts.resolvers import get_posts
@@ -16,10 +15,6 @@ from .settings import load, Settings
 
 @strawberry.type
 class Query:
-    @strawberry.field
-    def hello(self) -> str:
-        return "world"
-
     posts = strawberry.field(get_posts)
 
 
