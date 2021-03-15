@@ -1,3 +1,4 @@
+from blog_app.core.model.model_helper import ModelHelper
 from dataclasses import dataclass
 from typing import Any, Optional
 
@@ -12,6 +13,7 @@ from .types import Post
 @dataclass
 class Context:
     loader: Loader[Post]
+    model: ModelHelper
 
     @property
     def dataloader(self) -> DataLoader[int, Optional[Post]]:
@@ -20,4 +22,4 @@ class Context:
 
 async def build_post_context(model_map: ModelMap) -> PostContext:
     loader = Loader(constructor=Post, model=model_map["post"])
-    return Context(loader=loader)
+    return Context(loader=loader, model=model_map["post"])

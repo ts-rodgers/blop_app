@@ -26,3 +26,10 @@ class Post(AppPost):
 @strawberry.type
 class PostRetrievalError:
     message: str
+
+
+@strawberry.type
+class PostCreationResponse:
+    id: int
+    title: str
+    created: datetime

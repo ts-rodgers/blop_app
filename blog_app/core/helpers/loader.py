@@ -41,9 +41,12 @@ class Loader(Generic[LoaderType]):
             yield self.constructor(**row._asdict())
 
     async def _dataloader_fn(self, keys: List[int]) -> List[Optional[LoaderType]]:
-        return list(
-            Loader.fillBy(keys, await self.model.load_by_id(keys), lambda row: row.id)
-        )
+        return [
+            self.constructor(**row._asdict()) if row else row
+            for row in Loader.fillBy(
+                keys, await self.model.load_by_id(keys), lambda row: row.id
+            )
+        ]
 
     async def load(self, key: int) -> Optional[LoaderType]:
         return await self.dataloader.load(key)

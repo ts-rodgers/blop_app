@@ -14,7 +14,7 @@ class Collection(Generic[ItemType]):
 
     @strawberry.field
     async def all_items(self) -> List[ItemType]:
-        return [item for item in self.loader.all()]
+        return [item async for item in self.loader.all()]
 
     @strawberry.field
     async def by_id(self, ids: List[int]) -> List[Optional[ItemType]]:

@@ -41,17 +41,6 @@ ErrorType = TypeVar("ErrorType", covariant=True)
 MappedType = TypeVar("MappedType")
 
 
-@dataclass
-class AwaitableValue(Generic[ValueType]):
-    value: ValueType
-
-    def __await__(self):
-        return self.get_value().__await__()
-
-    async def get_value(self):
-        return self.value
-
-
 class Result(Generic[ValueType, ErrorType]):
     """
     A Pythonic Result generic, inspired by Rust.
@@ -244,9 +233,7 @@ class Result(Generic[ValueType, ErrorType]):
             Callable[[ValueType], "Result[MappedType, ErrorType]"],
             Callable[[ValueType], Awaitable["Result[MappedType, ErrorType]"]],
         ],
-    ) -> Union[
-        "Result[MappedType, ErrorType]", Awaitable["Result[MappedType, ErrorType]"]
-    ]:
+    ):
         """
         Calls func if the result is "ok", otherwise return the errored result.
 
@@ -271,10 +258,7 @@ class Result(Generic[ValueType, ErrorType]):
         if self.is_ok:
             return func(self._value)
         else:
-            result = cast(Result[MappedType, ErrorType], self)
-            return (
-                AwaitableValue(result) if inspect.iscoroutinefunction(func) else result
-            )
+            return _AwaitableResult(self)
 
     def __repr__(self):
         return (
@@ -292,6 +276,21 @@ class Result(Generic[ValueType, ErrorType]):
     def is_failed(self) -> bool:
         """Return True if this result has an error, else False."""
         return hasattr(self, "_error")
+
+
+class _AwaitableResult(Result):
+    """Awaitable proxy to a result object."""
+
+    def __await__(self):
+        yield
+        return self
+
+    def __init__(self, result):
+        if result.is_ok:
+            self._value = result._value
+
+        if result.is_failed:
+            self._error = result._error
 
 
 class InvalidResult(TypeError):
