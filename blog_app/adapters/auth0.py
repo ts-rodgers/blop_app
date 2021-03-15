@@ -135,6 +135,28 @@ class Auth0Authenticator(Authenticator):
             self._handle_token_response
         )
 
+    async def refresh_access_token(
+        self, refresh_token: str
+    ) -> GraphQLResult[Authorization, AuthError]:
+        controller = GetToken(self.settings.domain)
+        request_data = {
+            "grant_type": "refresh_token",
+            "client_id": self.settings.client_id,
+            "client_secret": self.settings.client_secret,
+            "refresh_token": refresh_token,
+        }
+        result: Result[Any, Auth0Error] = await asyncio.to_thread(
+            Result.wrap,
+            Auth0Error,
+            controller.post,
+            f"https://{self.settings.domain}/oauth/token",
+            data=request_data,
+        )
+
+        return await result.map_err(self._convert_auth0_error).and_then(
+            self._handle_token_response
+        )
+
     async def parse_id_token(self, token: str) -> User:
         """Verify that the id token generated is correct and return the payload."""
         issuer = f"https://{self.settings.domain}/".format(self.settings.domain)

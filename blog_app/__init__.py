@@ -7,7 +7,7 @@ from strawberry.asgi import GraphQL, ExecutionResult, GraphQLHTTPResponse
 
 from .core import AppRequest
 from .adapters.auth0 import Auth0Authenticator
-from .auth.resolvers import send_login_code, login_with_code
+from .auth.resolvers import send_login_code, login_with_code, refresh_login
 from .posts.resolvers import get_posts, create_post
 from .context import build_context
 from .database import create_model_map
@@ -23,6 +23,7 @@ class Query:
 class Mutation:
     send_login_code = strawberry.field(send_login_code)
     login_with_code = strawberry.field(login_with_code)
+    refresh_login = strawberry.field(refresh_login)
     create_post = strawberry.field(create_post)
 
 
@@ -57,7 +58,8 @@ class BlogApp(GraphQL):
         ...
 
     async def shutdown(self):
-        ...
+        # the same db engine is shared by all modules
+        await self.model_map["post"].engine.dispose()
 
     async def get_context(
         self, request: AppRequest, response: Optional[Any] = None

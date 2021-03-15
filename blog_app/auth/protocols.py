@@ -44,6 +44,13 @@ class Authenticator(Protocol):
 
         """
 
+    async def refresh_access_token(
+        self, refresh_token: str
+    ) -> GraphQLResult[Authorization, AuthError]:
+        """
+        Use a refresh token to get a new access token and return a new Authorization.
+        """
+
     async def get_verified_user(self, token: str) -> GraphQLResult[User, AuthError]:
         """
         Verify an access token and return an associated User.

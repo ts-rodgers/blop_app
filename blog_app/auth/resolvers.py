@@ -45,3 +45,14 @@ async def login_with_code(
         ).collapse()
     except Exception:  # unexpected error which cannot be recovered
         return AuthError.internal_error()
+
+
+async def refresh_login(
+    refresh_token: str, info: Info[AppContext, AppRequest]
+) -> Union[Authorization, AuthError]:
+    try:
+        return (
+            await get_authenticator(info).refresh_access_token(refresh_token)
+        ).collapse()
+    except Exception:  # unexpected error which cannot be recovered
+        return AuthError.internal_error()
