@@ -8,7 +8,7 @@ from strawberry.asgi import GraphQL, ExecutionResult, GraphQLHTTPResponse
 from .core import AppRequest
 from .adapters.auth0 import Auth0Authenticator
 from .auth.resolvers import send_login_code, login_with_code, refresh_login
-from .posts.resolvers import get_posts, create_post
+from .posts.resolvers import get_posts, create_post, update_post, delete_post
 from .context import build_context
 from .database import create_model_map
 from .settings import load, Settings
@@ -25,6 +25,8 @@ class Mutation:
     login_with_code = strawberry.field(login_with_code)
     refresh_login = strawberry.field(refresh_login)
     create_post = strawberry.field(create_post)
+    update_post = strawberry.field(update_post)
+    delete_post = strawberry.field(delete_post)
 
 
 class BlogApp(GraphQL):

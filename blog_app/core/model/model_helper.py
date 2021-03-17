@@ -1,9 +1,10 @@
-from typing import Any, List, Sequence, Union
+from typing import Any, Dict, List, Sequence, Union, cast
 
 from sqlalchemy.sql import select, ColumnElement
 from sqlalchemy.schema import Table
 
 from blog_app.core import Result
+from blog_app.core import InternalError
 
 
 class ModelHelper:
@@ -40,54 +41,46 @@ class ModelHelper:
             cursor = await conn.execute(stmt)
             return cursor.fetchall()
 
-    async def create(
-        self, *, returning: Sequence[Union[ColumnElement, str]] = None, **values
-    ):
+    async def create(self, **values):
         """Generic database record creation function, for use with an sqlachemy table."""
-        async with self.engine.connect() as conn:
-            stmt = self.table.insert().values(**values)
-            cursor = await conn.execute(stmt)
-            await conn.commit()
+        with InternalError.from_exception() as result:
+            async with self.engine.connect() as conn:
+                stmt = self.table.insert().values(**values)
+                cursor = await conn.execute(stmt)
+                await conn.commit()
+                result = result.map(lambda _: cast(int, cursor.lastrowid))
+            return result
 
-            if returning:
-                all_values = await self.load_all(
-                    *returning, conn=conn, id=cursor.lastrowid
-                )
-                return Result(value=all_values[0])
-
-        return Result(value=None)
-
-    async def update(
-        self,
-        item_id: int,
-        *,
-        returning: Sequence[Union[ColumnElement, str]] = None,
-        **values
-    ):
+    async def update(self, item_id: int, *, where: Dict[str, Any] = None, **values):
         """Generic database record update function, for use with an sqlachemy table."""
-        async with self.engine.connect() as conn:
-            stmt = (
-                self.table.update()
-                .where(self.table.c["id"] == item_id)
-                .values(**values)
-            )
-            if returning:
-                stmt = stmt.returning(*self.coerce_returning(returning))
+        with InternalError.from_exception() as result:
+            async with self.engine.connect() as conn:
+                stmt = (
+                    self.table.update()
+                    .where(self.table.c["id"] == item_id)
+                    .values(**values)
+                )
 
-            cursor = await conn.execute(stmt)
-            return cursor.fetchone()
+                for key, val in (where or {}).items():
+                    if hasattr(self.table.c, key):
+                        stmt = stmt.where(self.table.c[key] == val)
 
-    async def delete(
-        self, item_id: int, *, returning: Sequence[Union[ColumnElement, str]]
-    ):
+                cursor = await conn.execute(stmt)
+                await conn.commit()
+                result = result.map(lambda _: cast(int, cursor.rowcount))
+            return result
+
+    async def delete(self, item_id: int, *, where: Dict[str, Any] = None):
         """Generic database item delete function"""
-        async with self.engine.connect() as conn:
-            stmt = self.table.delete().where(self.table.c["id"] == item_id)
-            if returning:
-                stmt = stmt.returning(*self.coerce_returning(returning))
+        with InternalError.from_exception() as result:
+            async with self.engine.connect() as conn:
+                stmt = self.table.delete().where(self.table.c["id"] == item_id)
 
-            cursor = await conn.execute(stmt)
-            return cursor.fetchone()
+                for key, val in (where or {}).items():
+                    if hasattr(self.table.c, key):
+                        stmt = stmt.where(self.table.c[key] == val)
 
-    def coerce_returning(self, returning: Sequence[Union[ColumnElement, str]]):
-        return (self.table.c[col] if isinstance(col, str) else col for col in returning)
+                cursor = await conn.execute(stmt)
+                await conn.commit()
+                result = result.map(lambda _: cast(int, cursor.rowcount))
+            return result

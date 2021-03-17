@@ -1,11 +1,12 @@
+import asyncio
 import subprocess
 
-import pytest
 import typer
 import uvicorn
 
 from blog_app import _debug_app
-import blog_app
+from blog_app.database import create_tables
+from blog_app.settings import load as load_settings
 
 app = typer.Typer()
 
@@ -69,6 +70,12 @@ def server(host: str = "0.0.0.0", port: int = 8000):
 @app.command()
 def debug(host: str = "0.0.0.0", port: int = 8000):
     uvicorn.run(_debug_app, host=host, port=port, log_level="info")
+
+
+@app.command()
+def create_model():
+    settings = load_settings()
+    asyncio.run(create_tables(settings.database))
 
 
 if __name__ == "__main__":

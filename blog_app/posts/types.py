@@ -49,5 +49,16 @@ class PostRetrievalError:
 @strawberry.type
 class PostCreationResponse:
     id: int
-    title: str
-    created: datetime
+    title: PostTitle
+
+
+@strawberry.type
+class PostUpdateResponse:
+    id: int
+    title: Optional[PostTitle] = None
+    content: Optional[str] = None
+
+
+@strawberry.type
+class PostDeletionResponse:
+    id: int
