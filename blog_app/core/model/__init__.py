@@ -1,7 +1,7 @@
 import enum
 from typing import TypedDict
 
-from sqlalchemy.schema import Column, MetaData, Table
+from sqlalchemy.schema import Column, MetaData, Table, UniqueConstraint
 from sqlalchemy.sql import func, text, ColumnElement
 
 from sqlalchemy.sql.schema import ForeignKey
@@ -98,6 +98,7 @@ def register_tables(metadata: MetaData) -> ModelMap:
                         "CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP"
                     ),
                 ),
+                UniqueConstraint("comment_id", "author_id"),
                 mysql_engine="InnoDB",
                 mysql_charset="utf8mb4",
             ),
