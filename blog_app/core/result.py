@@ -21,10 +21,10 @@ True
 (None, ValueError(...))
 """
 
-import inspect
 from dataclasses import dataclass
 from collections.abc import Awaitable
 from typing import (
+    Any,
     Callable,
     Generic,
     Tuple,
@@ -39,6 +39,7 @@ from typing import (
 ValueType = TypeVar("ValueType", covariant=True)
 ErrorType = TypeVar("ErrorType", covariant=True)
 MappedType = TypeVar("MappedType")
+ExceptionType = TypeVar("ExceptionType", bound=Exception)
 
 
 class Result(Generic[ValueType, ErrorType]):
@@ -63,8 +64,12 @@ class Result(Generic[ValueType, ErrorType]):
 
     @classmethod
     def wrap(
-        cls, exc_type: Type[Exception], func: Callable[..., ValueType], *args, **kwargs
-    ):
+        cls,
+        exc_type: Type[ExceptionType],
+        func: Callable[..., ValueType],
+        *args,
+        **kwargs,
+    ) -> "Result[ValueType, ExceptionType]":
         """
         Wrap an operation with an expected exception and return a result.
 
@@ -222,12 +227,15 @@ class Result(Generic[ValueType, ErrorType]):
             (Result(error=error) if func(self._value) else self) if self.is_ok else self
         )
 
-    def set_failed(self, error: ErrorType):
+    def set_failed(self, error: Any):
         """
         Set the result to failed with the given error. This method
         is different from others in that it does not return a new
         result, but mutates this one instead.
         """
+        # fixme: refactor to eliminate this function. this scenario cannot
+        # be accurately typed due to faulty logic: https://github.com/python/mypy/issues/7049
+
         self._error = error
         del self._value
 
