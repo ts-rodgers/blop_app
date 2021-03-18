@@ -40,21 +40,21 @@ class InternalError(AppError):
     def from_exception():
         """
         A context manager that lets wrap a failable operation in
-        a Result[Any, InternalError], such that when code ran within
+        a Result[None, InternalError], such that when code ran within
         the context throws an Exception, an application error is logged
         and the Result is set to failed with an InternalError.
 
         >>> with InternalError.from_exception() as result:
-                raise ValueError()
+        ...     raise ValueError()
         >>> result
         Result(error=InternalError(...))
 
         Since InternalError is a graphql type, the result can be collapsed
         into a possible InternalError and returned directly from the resolver.
 
-        >>> with InternalError.from_exception() as result:
-                result = result.and_then(...).map(...).etc()
-        >>> return result
+        >>  with InternalError.from_exception() as result:
+        ..      result = result.and_then(...).map(...).etc()
+        >>  return result
 
         Note: it is important to make only one reassignment of the result
         within the context for this pattern to work. This is because the
@@ -63,9 +63,9 @@ class InternalError(AppError):
         the result upon which any future error will be set. If you need
         to make multiple reassignments, use this pattern instead:
 
-        >>> with InternalError.from_exception() as result:
-                user_result = result.and_then(...).map(...)
-        >>> return result.and_then(lambda _: user_result)
+        >>  with InternalError.from_exception() as result:
+        ..      user_result = result.and_then(...).map(...)
+        >>  return result.and_then(lambda _: user_result)
 
         Note how this pattern leaves the original result which might have
         an error in tact. In case of an error, result.and_then() would resolve to a
@@ -75,10 +75,9 @@ class InternalError(AppError):
         result = Result[None, InternalError](value=None)
         try:
             yield result
-        except Exception:
+        except:
             logging.exception("Operation failed")
             result.set_failed(InternalError())
-            raise
 
 
 @strawberry.type
