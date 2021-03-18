@@ -41,6 +41,8 @@ def register_tables(metadata: MetaData) -> ModelMap:
                         "CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP"
                     ),
                 ),
+                mysql_engine="InnoDB",
+                mysql_charset="utf8mb4",
             ),
             engine=metadata.bind,
         ),
@@ -52,7 +54,7 @@ def register_tables(metadata: MetaData) -> ModelMap:
                 Column(
                     "post_id",
                     Integer,
-                    ForeignKey("post.id"),
+                    ForeignKey("post.id", ondelete="CASCADE"),
                     nullable=False,
                     index=True,
                 ),
@@ -67,6 +69,8 @@ def register_tables(metadata: MetaData) -> ModelMap:
                         "CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP"
                     ),
                 ),
+                mysql_engine="InnoDB",
+                mysql_charset="utf8mb4",
             ),
             engine=metadata.bind,
         ),
@@ -78,7 +82,7 @@ def register_tables(metadata: MetaData) -> ModelMap:
                 Column(
                     "comment_id",
                     Integer,
-                    ForeignKey("comment.id"),
+                    ForeignKey("comment.id", ondelete="CASCADE"),
                     nullable=False,
                     index=True,
                 ),
@@ -92,6 +96,8 @@ def register_tables(metadata: MetaData) -> ModelMap:
                         "CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP"
                     ),
                 ),
+                mysql_engine="InnoDB",
+                mysql_charset="utf8mb4",
             ),
             engine=metadata.bind,
         ),
