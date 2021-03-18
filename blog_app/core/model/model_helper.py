@@ -15,10 +15,12 @@ class ModelHelper:
     """
 
     engine: Any
+    author_key: str
 
-    def __init__(self, table: Table, engine: Any):
+    def __init__(self, author_key: str, table: Table, engine: Any):
         self.table = table
         self.engine = engine
+        self.author_key = author_key
 
     async def load_all(self, *cols: Union[ColumnElement, str], conn=None, **where):
         columns = [self.table.c[col] if isinstance(col, str) else col for col in cols]

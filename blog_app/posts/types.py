@@ -1,3 +1,4 @@
+import re
 from typing import List, NewType, Optional
 from datetime import datetime
 
@@ -5,16 +6,25 @@ import strawberry
 from strawberry.types import Info
 
 from blog_app.core import AppComment, AppContext, AppRequest, Person, AppPost
-from .logic import coerce_title
 
 
-def parse_title(s: str):
-    result = coerce_title(s)
+WHITESPACE_REGEX = re.compile(r"\s+")
 
-    if result.is_failed:
-        raise ValueError(result.collapse())
+
+def parse_title(title: str):
+    """
+    Collapse whitespace within a string and trim both ends.
+
+    If the string is empty afterward, a ValueError will be raised.
+    (since this function is intended to be used as a scalar; strawberry
+    will convert the value error into a validation error on the field)
+    """
+    fixed = WHITESPACE_REGEX.sub(" ", title.strip())
+
+    if fixed:
+        return fixed
     else:
-        return result.collapse()
+        raise ValueError("PostTitle cannot contain only whitespace.")
 
 
 PostTitle = strawberry.scalar(

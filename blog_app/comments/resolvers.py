@@ -54,7 +54,6 @@ async def add_comment(
         (
             await handle_create(
                 {"post_id": post_id, "content": content},
-                "author_id",
                 info.context.auth,
                 get_comments_model(info),
             )
@@ -72,7 +71,6 @@ async def update_comment(
         (
             await handle_edit(
                 id,
-                "author_id",
                 info.context.auth,
                 get_loader(info),
                 EditType.UPDATE,
@@ -92,7 +90,6 @@ async def delete_comment(
         (
             await handle_edit(
                 id,
-                "author_id",
                 info.context.auth,
                 get_loader(info),
                 EditType.DELETE,

@@ -25,7 +25,7 @@ class ModelMap(TypedDict):
 def register_tables(metadata: MetaData) -> ModelMap:
     return ModelMap(
         post=ModelHelper(
-            Table(
+            table=Table(
                 "post",
                 metadata,
                 Column("id", Integer, primary_key=True, autoincrement=True),
@@ -44,10 +44,11 @@ def register_tables(metadata: MetaData) -> ModelMap:
                 mysql_engine="InnoDB",
                 mysql_charset="utf8mb4",
             ),
+            author_key="author_id",
             engine=metadata.bind,
         ),
         comment=ModelHelper(
-            Table(
+            table=Table(
                 "comment",
                 metadata,
                 Column("id", Integer, primary_key=True, autoincrement=True),
@@ -72,10 +73,11 @@ def register_tables(metadata: MetaData) -> ModelMap:
                 mysql_engine="InnoDB",
                 mysql_charset="utf8mb4",
             ),
+            author_key="author_id",
             engine=metadata.bind,
         ),
         reaction=ModelHelper(
-            Table(
+            table=Table(
                 "reaction",
                 metadata,
                 Column("id", Integer, primary_key=True, autoincrement=True),
@@ -99,6 +101,7 @@ def register_tables(metadata: MetaData) -> ModelMap:
                 mysql_engine="InnoDB",
                 mysql_charset="utf8mb4",
             ),
+            author_key="author_id",
             engine=metadata.bind,
         ),
     )

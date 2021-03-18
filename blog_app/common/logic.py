@@ -35,36 +35,30 @@ def remove_falsy_values(
 
 async def handle_create(
     args: dict,
-    author_key: str,
     auth: AuthContext,
     model: ModelHelper,
 ):
     return await (await auth.get_logged_in_user()).and_then(
-        lambda user: model.create(**_update_dict(args, {author_key: user.id}))
+        lambda user: model.create(**_update_dict(args, {model.author_key: user.id}))
     )
 
 
 async def handle_edit(
-    item_id: int,
-    author_key: str,
-    auth: AuthContext,
-    loader: Loader,
-    edit: EditType,
-    **args
+    item_id: int, auth: AuthContext, loader: Loader, edit: EditType, **args
 ) -> Result[None, Union[AppError, ItemNotFoundError, Unauthorized, InternalError]]:
     user_result = await (await auth.get_logged_in_user()).and_then(
-        lambda user: _validate_edit_authority(item_id, user, loader, author_key)
+        lambda user: _validate_edit_authority(item_id, user, loader)
     )
     db_result = await user_result.and_then(
         lambda user: getattr(loader.model, edit.value)(
-            item_id, where={author_key: user.id}, **args
+            item_id, where={loader.model.author_key: user.id}, **args
         )
     )
     return db_result.map(lambda _: None)
 
 
 async def _validate_edit_authority(
-    item_id: int, user: Person, loader: Loader, author_key: str
+    item_id: int, user: Person, loader: Loader
 ) -> Result[Person, Union[ItemNotFoundError, Unauthorized]]:
     unauthorized = Unauthorized("No authority to edit this")
     row = await loader.load(item_id)
@@ -72,7 +66,7 @@ async def _validate_edit_authority(
     if row is None:
         return Result(error=ItemNotFoundError(id=item_id))
 
-    author_id = getattr(row, author_key, None)
+    author_id = getattr(row, loader.model.author_key, None)
 
     if author_id is None:
         return Result(error=unauthorized)
