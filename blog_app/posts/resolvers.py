@@ -31,7 +31,7 @@ def get_loader(info: Info[AppContext, AppRequest]):
 
 
 def get_posts_model(info: Info[AppContext, AppRequest]):
-    return get_loader(info).model
+    return cast(Context, info.context.posts).model
 
 
 def coerce_error(err: AppError) -> Union[AuthError, ItemNotFoundError, InternalError]:

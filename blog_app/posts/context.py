@@ -1,11 +1,10 @@
-from blog_app.core.model.model_helper import ModelHelper
 from dataclasses import dataclass
 from typing import Any, Optional
 
 from strawberry.dataloader import DataLoader
 
 from blog_app.core.helpers import Loader
-from blog_app.core.model import ModelMap
+from blog_app.core.model import ModelMap, ModelHelper
 from blog_app.core.protocols import AppRequest, PostContext
 from .types import Post
 

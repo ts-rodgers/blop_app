@@ -1,10 +1,10 @@
-from typing import NewType, Optional
+from typing import List, NewType, Optional
 from datetime import datetime
 
 import strawberry
 from strawberry.types import Info
 
-from blog_app.core import AppContext, AppRequest, Person, AppPost
+from blog_app.core import AppComment, AppContext, AppRequest, Person, AppPost
 from .logic import coerce_title
 
 
@@ -28,7 +28,7 @@ PostTitle = strawberry.scalar(
 class Post(AppPost):
     id: int
     author_id: strawberry.ID
-    title: PostTitle
+    title: PostTitle  # type: ignore[valid-type]
     content: str
     created: datetime
     updated: datetime
@@ -40,6 +40,10 @@ class Post(AppPost):
         # happen.
         return await info.context.auth.users.load(self.author_id)  # type: ignore
 
+    @strawberry.field
+    async def comments(self, info: Info[AppContext, AppRequest]) -> List[AppComment]:
+        return await info.context.comments.by_post_id.load(self.id)
+
 
 @strawberry.type
 class PostRetrievalError:
@@ -49,13 +53,13 @@ class PostRetrievalError:
 @strawberry.type
 class PostCreationResponse:
     id: int
-    title: PostTitle
+    title: PostTitle  # type: ignore[valid-type]
 
 
 @strawberry.type
 class PostUpdateResponse:
     id: int
-    title: Optional[PostTitle] = None
+    title: Optional[PostTitle] = None  # type: ignore[valid-type]
     content: Optional[str] = None
 
 

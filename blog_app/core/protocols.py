@@ -6,6 +6,7 @@ blog_app.core.protocols -- interfaces for inter-module communication
 from typing import (
     Awaitable,
     Hashable,
+    List,
     Optional,
     Protocol,
     TypeVar,
@@ -40,6 +41,13 @@ class AppPost:
     id: int
 
 
+@strawberry.interface(name="AppComment")
+class AppComment:
+    id: int
+    content: str
+    author: Person
+
+
 @runtime_checkable
 class AuthContext(Protocol):
     @property
@@ -57,10 +65,31 @@ class PostContext(Protocol):
         ...
 
 
+@runtime_checkable
+class CommentContext(Protocol):
+    @property
+    def dataloader(self) -> Dataloader[int, Optional[AppComment]]:
+        ...
+
+    @property
+    def by_post_id(self) -> Dataloader[int, List[AppComment]]:
+        ...
+
+
 class AppContext(Protocol):
     request: AppRequest
     auth: AuthContext
     posts: PostContext
+    comments: CommentContext
 
 
-__all__ = ["AppRequest", "AppContext", "AuthContext", "Person", "AppPost"]
+__all__ = [
+    "AppRequest",
+    "AppContext",
+    "AuthContext",
+    "CommentContext",
+    "PostContext",
+    "Person",
+    "AppPost",
+    "AppComment",
+]

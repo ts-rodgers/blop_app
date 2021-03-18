@@ -1,4 +1,5 @@
 import logging
+import traceback
 from typing import Any, List, Optional
 from starlette.types import Receive, Scope, Send
 
@@ -9,6 +10,8 @@ from .core import AppRequest
 from .adapters.auth0 import Auth0Authenticator
 from .auth.resolvers import send_login_code, login_with_code, refresh_login
 from .posts.resolvers import get_posts, create_post, update_post, delete_post
+from .comments.resolvers import add_comment, update_comment, delete_comment
+from .comments.types import Comment
 from .context import build_context
 from .database import create_model_map
 from .settings import load, Settings
@@ -27,15 +30,22 @@ class Mutation:
     create_post = strawberry.field(create_post)
     update_post = strawberry.field(update_post)
     delete_post = strawberry.field(delete_post)
+    add_comment = strawberry.field(add_comment)
+    update_comment = strawberry.field(update_comment)
+    delete_comment = strawberry.field(delete_comment)
 
 
 class BlogApp(GraphQL):
     settings: Settings
 
     def __init__(self, **kwargs):
+        # These are types that strawberry can't detect because they aren't returned
+        # directly from any resolver.
+
+        additional_types = [Comment]
         kwargs.setdefault(
             "schema",
-            strawberry.Schema(query=Query, mutation=Mutation),
+            strawberry.Schema(query=Query, mutation=Mutation, types=additional_types),
         )
         super().__init__(**kwargs)
 
@@ -82,7 +92,11 @@ class BlogApp(GraphQL):
             data["errors"] = [err.formatted for err in result.errors]
 
             for error in result.errors:
-                logging.exception(error.original_error)
+                logging.error("An unhandled application error has occurred.")
+                if error.original_error:
+                    logging.error(
+                        "".join(traceback.format_tb(error.original_error.__traceback__))
+                    )
 
         return data
 
