@@ -1,11 +1,14 @@
 import asyncio
+import functools
 from typing import (
     Any,
     Callable,
+    Dict,
     Generator,
     Generic,
     Hashable,
     List,
+    Literal,
     Optional,
     Protocol,
     Sequence,
@@ -34,19 +37,11 @@ class Loader(Generic[LoaderType]):
     ):
         self.constructor = constructor
         self.model = model
-        self.dataloader = DataLoader(self._dataloader_fn)
+        self.dataloader = self.get_dataloader("id")
 
     async def all(self):
         for row in await self.model.load_all():
             yield self.constructor(**row._asdict())
-
-    async def _dataloader_fn(self, keys: List[int]) -> List[Optional[LoaderType]]:
-        return [
-            self.constructor(**row._asdict()) if row else row
-            for row in Loader.fillBy(
-                keys, await self.model.load_by_id(keys), lambda row: row.id
-            )
-        ]
 
     async def load(self, key: int) -> Optional[LoaderType]:
         return await self.dataloader.load(key)
@@ -59,8 +54,49 @@ class Loader(Generic[LoaderType]):
 
     @staticmethod
     def fillBy(keys: Sequence[K], items: Sequence[V], key_fn: Callable[[V], K]):
-        mapped = {key_fn(item): item for item in items}
-        return (mapped.get(key) for key in keys)
+        return (
+            matches[0] if matches else None
+            for matches in Loader.groupBy(keys, items, key_fn)
+        )
+
+    @staticmethod
+    def groupBy(keys: Sequence[K], items: Sequence[V], key_fn: Callable[[V], K]):
+        groups: Dict[Loader.K, List[Loader.V]] = {}
+
+        for item in items:
+            groups.setdefault(key_fn(item), []).append(item)
+
+        return (groups.get(key, []) for key in keys)
+
+    @functools.cache
+    def get_dataloader(self, key_field: str) -> DataLoader[int, Optional[LoaderType]]:
+        async def load_fn(keys: List[int]) -> List[Optional[LoaderType]]:
+            matching_rows = await self.model.load_all(
+                **{key_field: keys}
+            )  # where `<key_field>` in `<keys>`
+            return [
+                self.constructor(**row._asdict()) if row else None
+                for row in Loader.fillBy(
+                    keys, matching_rows, lambda row: getattr(row, key_field, None)
+                )
+            ]
+
+        return DataLoader(load_fn)
+
+    @functools.cache
+    def get_group_dataloader(self, key_field: str) -> DataLoader[int, List[LoaderType]]:
+        async def load_fn(keys: List[int]) -> List[List[LoaderType]]:
+            matching_rows = await self.model.load_all(
+                **{key_field: keys}
+            )  # where `<key_field>` in `<keys>`
+            return [
+                [self.constructor(**row._asdict()) for row in group]
+                for group in Loader.groupBy(
+                    keys, matching_rows, lambda row: getattr(row, key_field, None)
+                )
+            ]
+
+        return DataLoader(load_fn)
 
 
 __all__ = ["Loader"]
