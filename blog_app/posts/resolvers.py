@@ -10,7 +10,7 @@ from blog_app.core import (
     InternalError,
     ItemNotFoundError,
 )
-from blog_app.core.helpers import Collection
+from blog_app.core.helpers import QueryableCollection
 from blog_app.auth.types import AuthError
 from blog_app.common.logic import EditType, handle_create, handle_edit, Unauthorized
 from .context import Context
@@ -53,8 +53,8 @@ def get_posts_model(info: Info[AppContext, AppRequest]):
     return cast(Context, info.context.posts).model
 
 
-async def get_posts(info: Info[AppContext, AppRequest]) -> Collection[Post]:
-    return Collection(loader=get_loader(info))
+async def get_posts(info: Info[AppContext, AppRequest]) -> QueryableCollection[Post]:
+    return QueryableCollection(loader=get_loader(info))
 
 
 async def create_post(

@@ -41,7 +41,7 @@ class AppPost:
     id: int
 
 
-@strawberry.interface(name="AppComment")
+@strawberry.interface(name="Comment")
 class AppComment:
     id: int
     content: str

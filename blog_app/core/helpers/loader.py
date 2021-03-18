@@ -40,8 +40,9 @@ class Loader(Generic[LoaderType]):
         self.dataloader = self.get_dataloader("id")
 
     async def all(self):
-        for row in await self.model.load_all():
-            yield self.constructor(**row._asdict())
+        return (
+            self.constructor(**row._asdict()) for row in await self.model.load_all()
+        )
 
     async def load(self, key: int) -> Optional[LoaderType]:
         return await self.dataloader.load(key)

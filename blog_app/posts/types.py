@@ -6,6 +6,7 @@ import strawberry
 from strawberry.types import Info
 
 from blog_app.core import AppComment, AppContext, AppRequest, Person, AppPost
+from blog_app.core.helpers import Collection
 
 
 WHITESPACE_REGEX = re.compile(r"\s+")
@@ -51,8 +52,10 @@ class Post(AppPost):
         return await info.context.auth.users.load(self.author_id)  # type: ignore
 
     @strawberry.field
-    async def comments(self, info: Info[AppContext, AppRequest]) -> List[AppComment]:
-        return await info.context.comments.by_post_id.load(self.id)
+    async def comments(
+        self, info: Info[AppContext, AppRequest]
+    ) -> Collection[AppComment]:
+        return Collection(lambda: info.context.comments.by_post_id.load(self.id))
 
 
 @strawberry.type

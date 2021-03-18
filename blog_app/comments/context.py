@@ -22,7 +22,7 @@ class Context:
 
     @property
     def by_post_id(self):
-        return self.loader.get_group_dataloader("post_id", grouped=True)
+        return self.loader.get_group_dataloader("post_id")
 
 
 async def build_comment_context(model_map: ModelMap) -> CommentContext:

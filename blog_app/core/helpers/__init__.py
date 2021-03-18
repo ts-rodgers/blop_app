@@ -1,2 +1,2 @@
-from .collection import Collection
+from .collection import *
 from .loader import Loader
