@@ -19,6 +19,8 @@ from strawberry.asgi import Request, WebSocket
 
 from blog_app.core.result import Result
 from blog_app.core.types import AppError
+from blog_app.core.model import ReactionType
+from blog_app.core.helpers import Collection
 
 AppRequest = Union[Request, WebSocket]
 KeyType = TypeVar("KeyType", contravariant=True, bound=Hashable)
@@ -36,6 +38,16 @@ class Person:
     name: str
 
 
+AppReactionType = strawberry.enum(ReactionType)
+
+
+@strawberry.interface(name="Reaction")
+class AppReaction:
+    id: int
+    reaction_type: AppReactionType
+    author: Person
+
+
 @strawberry.interface(name="Post")
 class AppPost:
     id: int
@@ -46,6 +58,7 @@ class AppComment:
     id: int
     content: str
     author: Person
+    reactions: Collection[AppReaction]
 
 
 @runtime_checkable
@@ -68,11 +81,14 @@ class PostContext(Protocol):
 @runtime_checkable
 class CommentContext(Protocol):
     @property
-    def dataloader(self) -> Dataloader[int, Optional[AppComment]]:
+    def by_post_id(self) -> Dataloader[int, List[AppComment]]:
         ...
 
+
+@runtime_checkable
+class ReactionContext(Protocol):
     @property
-    def by_post_id(self) -> Dataloader[int, List[AppComment]]:
+    def by_comment_id(self) -> Dataloader[int, List[AppReaction]]:
         ...
 
 
@@ -81,6 +97,7 @@ class AppContext(Protocol):
     auth: AuthContext
     posts: PostContext
     comments: CommentContext
+    reactions: ReactionContext
 
 
 __all__ = [
@@ -89,7 +106,10 @@ __all__ = [
     "AuthContext",
     "CommentContext",
     "PostContext",
+    "ReactionContext",
     "Person",
     "AppPost",
     "AppComment",
+    "AppReaction",
+    "AppReactionType",
 ]

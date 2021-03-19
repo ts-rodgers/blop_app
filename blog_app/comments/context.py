@@ -17,10 +17,6 @@ class Context:
     model: ModelHelper
 
     @property
-    def dataloader(self):
-        return self.loader.get_dataloader("id")
-
-    @property
     def by_post_id(self):
         return self.loader.get_group_dataloader("post_id")
 

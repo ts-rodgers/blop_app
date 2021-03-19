@@ -19,7 +19,7 @@ from typing import (
 
 from strawberry.dataloader import DataLoader
 
-from blog_app.core.model import ModelHelper
+from blog_app.core.model.model_helper import ModelHelper
 
 
 class Identifyable(Protocol):

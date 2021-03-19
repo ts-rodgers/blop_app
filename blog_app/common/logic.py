@@ -34,12 +34,13 @@ def remove_falsy_values(
 
 
 async def handle_create(
-    args: dict,
-    auth: AuthContext,
-    model: ModelHelper,
-):
+    args: dict, auth: AuthContext, model: ModelHelper, *, on_conflict_set: dict = None
+) -> Result[int, Union[AppError, InternalError]]:
     return await (await auth.get_logged_in_user()).and_then(
-        lambda user: model.create(**_update_dict(args, {model.author_key: user.id}))
+        lambda user: model.create(
+            on_duplicate_key=on_conflict_set,
+            **_update_dict(args, {model.author_key: user.id})
+        )
     )
 
 

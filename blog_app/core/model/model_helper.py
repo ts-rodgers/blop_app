@@ -4,9 +4,9 @@ from sqlalchemy.sql import select, ColumnElement
 from sqlalchemy.schema import Table
 from sqlalchemy.sql.dml import Delete, Insert, Update
 from sqlalchemy.sql.selectable import Select
+from sqlalchemy.dialects.mysql import insert
 
-from blog_app.core import Result
-from blog_app.core import InternalError
+from blog_app.core.types import InternalError
 
 
 class ModelHelper:
@@ -35,11 +35,15 @@ class ModelHelper:
 
         return cursor.fetchall()
 
-    async def create(self, **values):
+    async def create(self, on_duplicate_key: dict = None, **values):
         """Generic database record creation function, for use with an sqlachemy table."""
         with InternalError.from_exception() as result:
             async with self.engine.connect() as conn:
-                stmt = self.table.insert().values(**values)
+                stmt = insert(self.table).values(**values)
+
+                if on_duplicate_key:
+                    stmt = stmt.on_duplicate_key_update(**on_duplicate_key)
+
                 cursor = await conn.execute(stmt)
                 await conn.commit()
                 result = result.map(lambda _: cast(int, cursor.lastrowid))
