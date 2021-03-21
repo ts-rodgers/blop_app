@@ -31,8 +31,43 @@ def test_wrap_raises_unexpected_errors():
 
 
 def test_wrap_on_sunny_day():
-    """Ensure that `Result.wrap` wraps the correct value when there are no errors."""
+    """Ensure that `Result.wrap` wraps the return value when there are no errors."""
     value, _ = Result.wrap(ValueError, int, "100").as_tuple()
+    assert value == 100
+
+
+@pytest.mark.asyncio
+async def test_async_wrap_catches_expected_errors():
+    """Ensure that `Result.wait_and_wrap` catches the error type it's supposed to."""
+
+    async def convert_value(val):
+        return int(val)
+
+    result = await Result.wait_and_wrap(ValueError, convert_value, "foo")
+    _, error = result.as_tuple()
+    assert isinstance(error, ValueError)
+
+
+@pytest.mark.asyncio
+async def test_async_wrap_ignores_unexpected_errors():
+    """Ensure that `Result.wait_and_wrap` catches the error type it's supposed to."""
+
+    async def convert_value(val):
+        return int(val)
+
+    with pytest.raises(ValueError):
+        result = await Result.wait_and_wrap(TypeError, convert_value, "foo")
+
+
+@pytest.mark.asyncio
+async def test_async_wrap_on_sunny_day():
+    """Ensure that `Result.wait_and_wrap` wraps return value when there are no errors."""
+
+    async def convert_value(val):
+        return int(val)
+
+    result = await Result.wait_and_wrap(TypeError, convert_value, "100")
+    value, _ = result.as_tuple()
     assert value == 100
 
 

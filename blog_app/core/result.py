@@ -247,13 +247,6 @@ class Result(Generic[ValueType, ErrorType]):
             else cast(Result[ValueType, MappedType], self)
         )
 
-    def reject(
-        self, func: Callable[[ValueType], bool], error: MappedType
-    ) -> "Result[ValueType, Union[ErrorType, MappedType]]":
-        return (
-            (Result(error=error) if func(self._value) else self) if self.is_ok else self
-        )
-
     @overload
     def and_then(
         self, func: Callable[[ValueType], Awaitable["Result[MappedType, ErrorType]"]]
