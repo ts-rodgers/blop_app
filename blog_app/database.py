@@ -1,7 +1,6 @@
 from typing import Any, NamedTuple, Tuple
 
 from typed_settings import settings, secret
-from typer.main import get_install_completion_arguments
 from sqlalchemy.ext.asyncio import create_async_engine
 from sqlalchemy.schema import MetaData
 

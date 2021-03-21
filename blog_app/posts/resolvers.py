@@ -12,7 +12,13 @@ from blog_app.core import (
 )
 from blog_app.core.helpers import QueryableCollection
 from blog_app.auth.types import AuthError
-from blog_app.common.logic import EditType, handle_create, handle_edit, Unauthorized
+from blog_app.common.logic import (
+    EditType,
+    handle_create,
+    handle_edit,
+    Unauthorized,
+    remove_falsy_values,
+)
 from .context import Context
 from .types import (
     Post,
@@ -65,7 +71,7 @@ async def create_post(
             await handle_create(
                 {"title": title, "content": content},
                 info.context.auth,
-                get_loader(info),
+                get_posts_model(info),
             )
         )
         .map(lambda id: PostCreationResponse(id=id, title=title))
@@ -81,7 +87,7 @@ async def update_post(
     title: Optional[PostTitle] = None,
     content: Optional[str] = None,
 ) -> Union[PostUpdateResponse, PostEditError]:
-    args = {"title": title, "content": content}
+    args = remove_falsy_values({"title": title, "content": content})
     return (
         (
             await handle_edit(

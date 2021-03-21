@@ -47,11 +47,12 @@ async def handle_create(
 async def handle_edit(
     item_id: int, auth: AuthContext, loader: Loader, edit: EditType, **args
 ) -> Result[None, Union[AppError, ItemNotFoundError, Unauthorized, InternalError]]:
+    edit_func = getattr(loader.model, edit.value)
     user_result = await (await auth.get_logged_in_user()).and_then(
         lambda user: _validate_edit_authority(item_id, user, loader)
     )
     db_result = await user_result.and_then(
-        lambda user: getattr(loader.model, edit.value)(
+        lambda user: edit_func(
             item_id, where={loader.model.author_key: user.id}, **args
         )
     )

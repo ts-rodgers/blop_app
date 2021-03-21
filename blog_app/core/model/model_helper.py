@@ -37,46 +37,53 @@ class ModelHelper:
 
     async def create(self, on_duplicate_key: dict = None, **values):
         """Generic database record creation function, for use with an sqlachemy table."""
-        with InternalError.from_exception() as result:
-            async with self.engine.connect() as conn:
-                stmt = insert(self.table).values(**values)
+        return await InternalError.wrap(self._create, on_duplicate_key, **values)
 
-                if on_duplicate_key:
-                    stmt = stmt.on_duplicate_key_update(**on_duplicate_key)
+    async def _create(self, on_duplicate_key: dict = None, **values):
+        """Generic database record creation function, for use with an sqlachemy table."""
+        async with self.engine.connect() as conn:
+            stmt = insert(self.table).values(**values)
 
-                cursor = await conn.execute(stmt)
-                await conn.commit()
-                result = result.map(lambda _: cast(int, cursor.lastrowid))
-            return result
+            if on_duplicate_key:
+                stmt = stmt.on_duplicate_key_update(**on_duplicate_key)
+
+            cursor = await conn.execute(stmt)
+            await conn.commit()
+            return cast(int, cursor.lastrowid)
 
     async def update(self, item_id: int, *, where: Dict[str, Any] = None, **values):
         """Generic database record update function, for use with an sqlachemy table."""
-        with InternalError.from_exception() as result:
-            async with self.engine.connect() as conn:
-                stmt = (
-                    self.table.update()
-                    .where(self.table.c["id"] == item_id)
-                    .values(**values)
-                )
+        return await InternalError.wrap(self._update, item_id, where=where, **values)
 
-                stmt = self._restrict_rows(stmt, where)
+    async def _update(self, item_id: int, *, where: Dict[str, Any] = None, **values):
+        """Generic database record update function, for use with an sqlachemy table."""
+        print(values)
+        async with self.engine.connect() as conn:
+            stmt = (
+                self.table.update()
+                .where(self.table.c["id"] == item_id)
+                .values(**values)
+            )
 
-                cursor = await conn.execute(stmt)
-                await conn.commit()
-                result = result.map(lambda _: cast(int, cursor.rowcount))
-            return result
+            stmt = self._restrict_rows(stmt, where)
+
+            cursor = await conn.execute(stmt)
+            await conn.commit()
+            return cast(int, cursor.rowcount)
 
     async def delete(self, item_id: int, *, where: Dict[str, Any] = None):
         """Generic database item delete function"""
-        with InternalError.from_exception() as result:
-            async with self.engine.connect() as conn:
-                stmt = self.table.delete().where(self.table.c["id"] == item_id)
-                stmt = self._restrict_rows(stmt, where)
+        return await InternalError.wrap(self._delete, item_id, where=where)
 
-                cursor = await conn.execute(stmt)
-                await conn.commit()
-                result = result.map(lambda _: cast(int, cursor.rowcount))
-            return result
+    async def _delete(self, item_id: int, *, where: Dict[str, Any] = None):
+        """Generic database item delete function"""
+        async with self.engine.connect() as conn:
+            stmt = self.table.delete().where(self.table.c["id"] == item_id)
+            stmt = self._restrict_rows(stmt, where)
+
+            cursor = await conn.execute(stmt)
+            await conn.commit()
+            return cast(int, cursor.rowcount)
 
     @overload
     def _restrict_rows(self, stmt: Select, where: Dict[str, Any] = None) -> Select:
@@ -100,7 +107,7 @@ class ModelHelper:
             if hasattr(self.table.c, key):
                 stmt = stmt.where(
                     self.table.c[key].in_(val)
-                    if isinstance(val, Collection)
+                    if isinstance(val, (list, tuple))
                     else self.table.c[key] == val
                 )
 

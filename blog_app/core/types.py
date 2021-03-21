@@ -1,7 +1,8 @@
 import base64
 import logging
+import traceback
 from contextlib import contextmanager
-from typing import Any, NewType, TypeVar
+from typing import Any, Awaitable, Callable, NewType, Optional, TypeVar
 
 
 import strawberry
@@ -28,56 +29,26 @@ ID = strawberry.scalar(
 
 @strawberry.type
 class InternalError(AppError):
-    def __init__(self, message: str = None):
-        self.original_message = message
+    def __init__(self, original_exception: Optional[Exception] = None):
+        self.original_exception = original_exception
+
+        if original_exception:
+            logging.error(f"Operation failed: {str(original_exception)}")
+            logging.error(
+                "".join(traceback.format_tb(original_exception.__traceback__))
+            )
 
     @strawberry.field()
     def message(self) -> str:
         return "An internal error has occurred."
 
     @staticmethod
-    @contextmanager
-    def from_exception():
-        """
-        A context manager that lets wrap a failable operation in
-        a Result[None, InternalError], such that when code ran within
-        the context throws an Exception, an application error is logged
-        and the Result is set to failed with an InternalError.
-
-        >>> with InternalError.from_exception() as result:
-        ...     raise ValueError()
-        >>> result
-        Result(error=InternalError(...))
-
-        Since InternalError is a graphql type, the result can be collapsed
-        into a possible InternalError and returned directly from the resolver.
-
-        >>  with InternalError.from_exception() as result:
-        ..      result = result.and_then(...).map(...).etc()
-        >>  return result
-
-        Note: it is important to make only one reassignment of the result
-        within the context for this pattern to work. This is because the
-        error is only set on the originally yielded result; if you manage
-        to successfully reassign the name, then you will have thrown away
-        the result upon which any future error will be set. If you need
-        to make multiple reassignments, use this pattern instead:
-
-        >>  with InternalError.from_exception() as result:
-        ..      user_result = result.and_then(...).map(...)
-        >>  return result.and_then(lambda _: user_result)
-
-        Note how this pattern leaves the original result which might have
-        an error in tact. In case of an error, result.and_then() would resolve to a
-        result which contains the error.
-
-        """
-        result = Result[None, InternalError](value=None)
-        try:
-            yield result
-        except:
-            logging.exception("Operation failed")
-            result.set_failed(InternalError())
+    async def wrap(
+        func: Callable[..., Awaitable[ValueType]], *args, **kwargs
+    ) -> Result[ValueType, "InternalError"]:
+        return (await Result.wait_and_wrap(Exception, func, *args, **kwargs)).map_err(
+            InternalError
+        )
 
 
 @strawberry.type

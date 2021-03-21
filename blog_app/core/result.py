@@ -89,6 +89,33 @@ class Result(Generic[ValueType, ErrorType]):
         except:
             raise
 
+    @classmethod
+    async def wait_and_wrap(
+        cls,
+        exc_type: Type[ExceptionType],
+        func: Callable[..., Awaitable[ValueType]],
+        *args,
+        **kwargs,
+    ) -> "Result[ValueType, ExceptionType]":
+        """
+        Wrap an operation with an expected exception and return a result.
+
+        >>> Result.wrap(ValueError, int, "10")
+        Result(value=10)
+        >>> Result.wrap(ValueError, int, "foo")
+        Result(error=ValueError(...))
+        >>> Result.wrap(TypeError, int, "foo")
+        Traceback (most recent call last):
+            ...
+        ValueError: invalid literal for int() with base 10: 'foo'
+        """
+        try:
+            return Result(value=await func(*args, **kwargs))
+        except exc_type as err:
+            return Result(error=err)
+        except:
+            raise
+
     _value: ValueType
     _error: ErrorType
 
