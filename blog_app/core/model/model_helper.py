@@ -22,25 +22,20 @@ class ModelHelper:
         self.engine = engine
         self.author_key = author_key
 
-    async def load_all(self, *cols: Union[ColumnElement, str], conn=None, **where):
+    async def load_all(self, *cols: Union[ColumnElement, str], **where):
         columns = [self.table.c[col] if isinstance(col, str) else col for col in cols]
         stmt = select(*(columns or self.table.columns))
         stmt = self._restrict_rows(stmt, where)
 
-        if conn is None:
-            async with self.engine.connect() as conn:
-                cursor = await conn.execute(stmt)
-        else:
+        async with self.engine.connect() as conn:
             cursor = await conn.execute(stmt)
-
-        return cursor.fetchall()
+            return cursor.fetchall()
 
     async def create(self, on_duplicate_key: dict = None, **values):
-        """Generic database record creation function, for use with an sqlachemy table."""
         return await InternalError.wrap(self._create, on_duplicate_key, **values)
 
     async def _create(self, on_duplicate_key: dict = None, **values):
-        """Generic database record creation function, for use with an sqlachemy table."""
+        """Generic database record creation function"""
         async with self.engine.connect() as conn:
             stmt = insert(self.table).values(**values)
 
@@ -52,11 +47,10 @@ class ModelHelper:
             return cast(int, cursor.lastrowid)
 
     async def update(self, item_id: int, *, where: Dict[str, Any] = None, **values):
-        """Generic database record update function, for use with an sqlachemy table."""
         return await InternalError.wrap(self._update, item_id, where=where, **values)
 
     async def _update(self, item_id: int, *, where: Dict[str, Any] = None, **values):
-        """Generic database record update function, for use with an sqlachemy table."""
+        """Generic database record update function."""
         print(values)
         async with self.engine.connect() as conn:
             stmt = (
@@ -72,7 +66,6 @@ class ModelHelper:
             return cast(int, cursor.rowcount)
 
     async def delete(self, item_id: int, *, where: Dict[str, Any] = None):
-        """Generic database item delete function"""
         return await InternalError.wrap(self._delete, item_id, where=where)
 
     async def _delete(self, item_id: int, *, where: Dict[str, Any] = None):

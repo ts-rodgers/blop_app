@@ -4,7 +4,7 @@ from typing import Iterable, Mapping, NewType, Union
 from blog_app.core import Result, AppError, InternalError, ItemNotFoundError
 from blog_app.core.helpers import Loader
 from blog_app.core.protocols import AuthContext, Person
-from .model_helper import ModelHelper
+from blog_app.core.model import ModelHelper
 
 
 class Unauthorized(AppError):

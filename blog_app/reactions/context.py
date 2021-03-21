@@ -1,9 +1,8 @@
 from dataclasses import dataclass
 
 from blog_app.core.helpers import Loader
-from blog_app.core.model import ModelMap
+from blog_app.core.model import ModelHelper, ModelMap
 from blog_app.core.protocols import ReactionContext
-from blog_app.common import ModelHelper
 
 from .types import Reaction
 
