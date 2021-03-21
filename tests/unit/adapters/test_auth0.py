@@ -79,6 +79,29 @@ class APIStub:
         )
         return self.requests_mock
 
+    def users(self, *, data=None, status_code=None):
+        @self.override_responder(data=data, status_code=status_code)
+        def responder(request: Request, _):
+            response_data: Dict[str, Any] = {
+                "users": [
+                    {
+                        "user_id": "1",
+                        "name": "Tom",
+                    },
+                    {
+                        "user_id": "2",
+                        "name": "Tim",
+                    },
+                ]
+            }
+
+            return response_data
+
+        self.requests_mock.register_uri(
+            "GET", f"https://{self.settings.domain}/api/v2/users", json=responder
+        )
+        return self.requests_mock
+
 
 @pytest.fixture
 def settings():
@@ -252,6 +275,76 @@ async def test_login_with_code_auth_error_on_invalid_id_token(
     )
     result = await authenticator.login_with_code(code, source, transport)
     assert isinstance(result.collapse(), AuthError)
+
+
+@pytest.mark.parametrize(
+    "token", ["v1.MaUU9gDvF7NKjgshqNIdD09qR93dQLaVsH7utXHqFhf-6NDU"]
+)
+@pytest.mark.asyncio
+async def test_refresh_access_token(
+    token: str,
+    api_stub: APIStub,
+    settings: Auth0AuthenticatorSettings,
+    authenticator: Auth0Authenticator,
+    mocker,
+):
+    mock = api_stub.oauth()
+    mocker.patch("auth0.v3.authentication.token_verifier.TokenVerifier.verify")
+    result = await authenticator.refresh_access_token(token)
+
+    assert isinstance(result, Result)
+    assert result.is_ok
+    assert mock.called
+
+    last_request = mock.last_request
+    assert last_request.path == "/oauth/token"
+    assert last_request.hostname == settings.domain
+
+    expected_request_data = {
+        "client_id": settings.client_id,
+        "client_secret": settings.client_secret,
+        "grant_type": "refresh_token",
+        "refresh_token": token,
+    }
+
+    assert last_request.json() == expected_request_data
+    assert isinstance(result.collapse(), Authorization)
+
+
+@pytest.mark.parametrize(
+    "ids,expected_users",
+    [
+        (["1", "2"], [User(id="1", name="Tom"), User(id="2", name="Tim")]),  # type: ignore
+        (["2", "2"], [User(id="2", name="Tim"), User(id="2", name="Tim")]),  # type: ignore
+        (["5", "1"], [None, User(id="1", name="Tom")]),  # type: ignore
+        (["134", "23"], [None, None]),
+    ],
+)
+@pytest.mark.asyncio
+async def test_get_users_by_ids(
+    ids,
+    expected_users,
+    api_stub: APIStub,
+    settings: Auth0AuthenticatorSettings,
+    authenticator: Auth0Authenticator,
+    mocker,
+):
+    mock = api_stub.users()
+    mocker.patch("auth0.v3.authentication.token_verifier.TokenVerifier.verify")
+    received_users = await authenticator.get_users_by_ids(ids)
+
+    last_request = mock.last_request
+    assert last_request.path == "/api/v2/users"
+    assert last_request.hostname == settings.domain
+    assert "q=user_id" in last_request.query
+
+    for received, expected in zip(received_users, expected_users):
+        if received is None:
+            assert expected is None
+
+        else:
+            assert received.id == expected.id
+            assert received.name == expected.name
 
 
 @pytest.mark.parametrize(

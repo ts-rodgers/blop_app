@@ -1,6 +1,5 @@
 import asyncio
 
-from datetime import datetime
 from functools import partial
 from typing import Any, List, Optional
 
@@ -187,7 +186,7 @@ class Auth0Authenticator(Authenticator):
         users_structs = await asyncio.to_thread(auth0.users.list, q=q)
 
         return [
-            User(id=struct["user_id"], name=struct["name"])
+            User(id=struct["user_id"], name=struct["name"]) if struct else None
             for struct in Loader.fillBy(
                 ids, users_structs["users"], lambda s: s["user_id"]
             )
