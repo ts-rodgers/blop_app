@@ -254,18 +254,6 @@ class Result(Generic[ValueType, ErrorType]):
             (Result(error=error) if func(self._value) else self) if self.is_ok else self
         )
 
-    def set_failed(self, error: Any):
-        """
-        Set the result to failed with the given error. This method
-        is different from others in that it does not return a new
-        result, but mutates this one instead.
-        """
-        # fixme: refactor to eliminate this function. this scenario cannot
-        # be accurately typed due to faulty logic: https://github.com/python/mypy/issues/7049
-
-        self._error = error
-        del self._value
-
     @overload
     def and_then(
         self, func: Callable[[ValueType], Awaitable["Result[MappedType, ErrorType]"]]
