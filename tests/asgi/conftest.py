@@ -80,7 +80,7 @@ def event_loop():
 
 @pytest.fixture(scope="session")
 def database_settings():
-    return DatabaseSettings(
+    return DatabaseSettings(  # type: ignore[call-arg]
         connection_url=environ.get(
             "TEST_DATABASE_URL",
             "mysql+aiomysql://blog_app:5678@127.0.0.1:3306/blog_app_test",

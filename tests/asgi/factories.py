@@ -93,9 +93,9 @@ class ModelFactory(factory.Factory):
         # Fetch an item from the db and return a matching
         # model
         assert cls.engine is not None
-        assert cls.table is not None
 
         async def fetch_coro():
+            assert cls.table is not None
             stmt = cls.table.select().where(cls.table.c.id == id)
 
             async with cls.engine.connect() as conn:

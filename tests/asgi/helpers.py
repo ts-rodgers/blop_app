@@ -15,7 +15,7 @@ def transform_item_keys(data: dict, keys):
             if not transform_spec:
                 transform_spec = {"ops": [{"type": "delete"}]}
 
-            if isinstance(transform_spec, Callable):
+            if callable(transform_spec):
                 transform_spec = {
                     "ops": [{"type": "replace", "get_value": transform_spec}]
                 }
