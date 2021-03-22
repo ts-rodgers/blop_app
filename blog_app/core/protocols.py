@@ -3,6 +3,7 @@ blog_app.core.protocols -- interfaces for inter-module communication
 
 """
 
+from datetime import datetime
 from typing import (
     Awaitable,
     Hashable,
@@ -44,21 +45,33 @@ AppReactionType = strawberry.enum(ReactionType)
 @strawberry.interface(name="Reaction")
 class AppReaction:
     id: int
+    comment_id: int
     reaction_type: AppReactionType
     author: Person
-
-
-@strawberry.interface(name="Post")
-class AppPost:
-    id: int
 
 
 @strawberry.interface(name="Comment")
 class AppComment:
     id: int
+    post_id: int
     content: str
+    author_id: strawberry.ID
     author: Person
     reactions: Collection[AppReaction]
+    created: datetime
+    updated: datetime
+
+
+@strawberry.interface(name="Post")
+class AppPost:
+    id: int
+    author_id: strawberry.ID
+    author: Person
+    title: str
+    content: str
+    comments: Collection[AppComment]
+    created: datetime
+    updated: datetime
 
 
 @runtime_checkable

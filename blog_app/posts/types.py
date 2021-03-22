@@ -39,7 +39,7 @@ PostTitle = strawberry.scalar(
 class Post(AppPost):
     id: int
     author_id: strawberry.ID
-    title: PostTitle  # type: ignore[valid-type]
+    title: str
     content: str
     created: datetime
     updated: datetime

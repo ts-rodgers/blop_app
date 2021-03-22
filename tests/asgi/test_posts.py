@@ -11,7 +11,9 @@ from .helpers import get_item_repr
 def test_can_get_all_posts_without_auth(
     client: GraphQLClient, post_factory: Type[PostFactory]
 ):
-    posts: List[FakePost] = post_factory.create_batch(6)
+    post_factory.clear()  # delete all exisiting records
+
+    posts: List[FakePost] = post_factory.create_batch(100)
 
     result = client.execute(
         """
