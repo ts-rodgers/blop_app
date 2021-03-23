@@ -7,6 +7,7 @@ import strawberry
 
 from blog_app.auth.types import User
 from blog_app.posts.types import Post
+from blog_app.comments.types import Comment
 
 
 class FakeUser(User):
@@ -31,7 +32,18 @@ class FakePost(Post):
 
     def __init__(self, author, **kwargs):
         self.author = author
-        ModelFactory.sanitize_args(kwargs)
+        ModelFactory._sanitize_args(kwargs)
+        super().__init__(**kwargs)
+
+
+class FakeComment(Comment):
+    author: FakeUser  # type: ignore
+    post: FakePost
+
+    def __init__(self, author, post, **kwargs):
+        self.author = author
+        self.post = post
+        ModelFactory._sanitize_args(kwargs)
         super().__init__(**kwargs)
 
 
@@ -56,37 +68,54 @@ class ModelFactory(factory.Factory):
     id = None
 
     @classmethod
-    def create_db_row(cls, args: dict):
+    def _run_coroutine(cls, coro):
         assert cls.event_loop is not None
-        cls.event_loop.run_until_complete(cls.create_db_row_async(args))
+        return cls.event_loop.run_until_complete(coro)
 
     @classmethod
-    async def create_db_row_async(cls, args: dict):
-        assert cls.engine is not None
-        assert cls.table is not None
+    def _create_db_row(cls, args: dict):
+        async def create_db_row_coro():
+            assert cls.engine is not None
+            assert cls.table is not None
 
-        values = {}
-        for key in args:
-            if key in cls.table.c:
-                values[key] = args[key]
+            values = {}
+            for key in args:
+                if key in cls.table.c:
+                    values[key] = args[key]
 
-        stmt = cls.table.insert().values(**values)
-        async with cls.engine.connect() as conn:
-            cursor = await conn.execute(stmt)
-            await conn.commit()
-            args["id"] = cursor.lastrowid
+            stmt = cls.table.insert().values(**values)
+            async with cls.engine.connect() as conn:
+                cursor = await conn.execute(stmt)
+                await conn.commit()
+                args["id"] = cursor.lastrowid
+
+        cls._run_coroutine(create_db_row_coro())
 
     @staticmethod
-    def sanitize_args(args: dict):
+    def _sanitize_args(args: dict):
         args.pop("engine", None)
         args.pop("table", None)
         args.pop("event_loop", None)
 
     @classmethod
     def _create(cls, model_class, **args):
-        cls.sanitize_args(args)
-        cls.create_db_row(args)
+        cls._sanitize_args(args)
+        cls._create_db_row(args)
         return model_class(**args)
+
+    @classmethod
+    def clear(cls):
+        async def delete_coro():
+            assert cls.engine is not None
+            assert cls.table is not None
+
+            stmt = cls.table.delete().where(cls.table.c.id > 0)
+
+            async with cls.engine.connect() as conn:
+                await conn.execute(stmt)
+                await conn.commit()
+
+        cls._run_coroutine(delete_coro())
 
     @classmethod
     def fetch(cls, id: int):
@@ -111,8 +140,7 @@ class ModelFactory(factory.Factory):
 
             return cls.build(author=author, **row)
 
-        assert cls.event_loop is not None
-        return cls.event_loop.run_until_complete(fetch_coro())
+        return cls._run_coroutine(fetch_coro())
 
 
 class PostFactory(ModelFactory):
@@ -125,3 +153,16 @@ class PostFactory(ModelFactory):
     updated = factory.Faker("date_time")
     author = factory.SubFactory(UserFactory)
     author_id = factory.LazyAttribute(lambda self: self.author.id)
+
+
+class CommentFactory(ModelFactory):
+    class Meta:
+        model = FakeComment
+
+    content = factory.Faker("text", max_nb_chars=200)
+    created = factory.Faker("date_time")
+    updated = factory.Faker("date_time")
+    author = factory.SubFactory(UserFactory)
+    author_id = factory.LazyAttribute(lambda self: self.author.id)
+    post = factory.SubFactory(PostFactory)
+    post_id = factory.LazyAttribute(lambda self: self.post.id)

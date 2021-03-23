@@ -18,9 +18,6 @@ class Collection(Generic[ItemType]):
     async def all_items(self) -> List[ItemType]:
         return [item for item in await self.load_fn()]
 
-    async def _load_all(self) -> Sequence[ItemType]:
-        return await self.load_fn()
-
 
 @strawberry.type
 class QueryableCollection(Collection[ItemType]):

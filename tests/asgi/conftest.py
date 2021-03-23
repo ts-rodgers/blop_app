@@ -19,12 +19,20 @@ from blog_app.core import Result
 from blog_app.core.model import ModelMap
 from blog_app.auth.types import AuthError
 from blog_app.database import DatabaseSettings, create_metadata, create_model_map
+from blog_app.comments.types import Comment
 from blog_app.posts.types import Post
 
-from .factories import FakeUser, FakePost, PostFactory, UserFactory
+from .factories import (
+    CommentFactory,
+    FakeComment,
+    FakeUser,
+    FakePost,
+    PostFactory,
+    UserFactory,
+)
 
 
-T = TypeVar("T", bound=Post)
+T = TypeVar("T", Post, Comment)
 
 
 class Fetcher(Generic[T]):
@@ -66,11 +74,6 @@ def client(blog_app: BlogApp, event_loop):
         yield client
 
 
-@pytest.fixture
-def post_fetcher(post_factory):
-    return post_factory
-
-
 @pytest.fixture(scope="session")
 def event_loop():
     loop = asyncio.get_event_loop_policy().new_event_loop()
@@ -90,11 +93,16 @@ def database_settings():
 
 
 @pytest.fixture(scope="session")
-async def model_map(database_settings):
+async def db_metadata(database_settings):
     # one engine per testing session is enough; we will
     # purge and drop records automatically with other
     # fixtures.
-    metadata, model_map = create_metadata(database_settings)
+    return create_metadata(database_settings)
+
+
+@pytest.fixture(scope="session")
+async def model_map(db_metadata):
+    metadata, model_map = db_metadata
     engine: Any = metadata.bind
 
     async with engine.connect() as conn:
@@ -145,17 +153,18 @@ def state(_state):
 
 
 @pytest.fixture(autouse=True)
-def fakersettings(locale):
+def faker_settings(locale):
     with factory.Faker.override_default_locale(locale):
         yield
 
 
-@pytest.fixture(autouse=True)
-def allow_fake_user_login(mocker: MockerFixture):
-    # reset the registry, so that user fixtures from
-    # the last tests are not allowed to login during this test
+@pytest.fixture(scope="session")
+def reset_fake_user_registry():
     FakeUser.registry = []
 
+
+@pytest.fixture(autouse=True)
+def allow_fake_user_login(mocker: MockerFixture):
     async def get_verified_user_stub(token: str):
         matching_user = next(
             (user for user in FakeUser.registry if user.access_token == token), None
@@ -184,20 +193,36 @@ def allow_fake_user_login(mocker: MockerFixture):
     )
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(autouse=True, scope="session")
 def setup_auto_insert_model_factory_instances(
-    post_factory: Type[PostFactory],
     model_map: ModelMap,
     event_loop: asyncio.AbstractEventLoop,
 ):
 
     post_model = model_map["post"]
-    post_factory.engine = post_model.engine
-    post_factory.table = post_model.table
-    post_factory.event_loop = event_loop
+    PostFactory.engine = post_model.engine
+    PostFactory.table = post_model.table
+    PostFactory.event_loop = event_loop
+
+    comment_model = model_map["comment"]
+    CommentFactory.engine = comment_model.engine
+    CommentFactory.table = comment_model.table
+    CommentFactory.event_loop = event_loop
 
 
 register(UserFactory)
 register(PostFactory)
+register(CommentFactory)
 register(UserFactory, "user")
 register(PostFactory, "post")
+register(CommentFactory, "comment")
+
+
+@pytest.fixture
+def post_fetcher(post_factory):
+    return post_factory
+
+
+@pytest.fixture
+def comment_fetcher(comment_factory):
+    return comment_factory
