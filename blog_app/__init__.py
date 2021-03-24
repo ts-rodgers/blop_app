@@ -96,7 +96,9 @@ class BlogApp(GraphQL):
             data["errors"] = [err.formatted for err in result.errors]
 
             for error in result.errors:
-                logging.error("An unhandled application error has occurred.")
+                logging.error(
+                    f"An unhandled application error has occurred: {str(error)}"
+                )
                 if error.original_error:
                     logging.error(
                         "".join(traceback.format_tb(error.original_error.__traceback__))
