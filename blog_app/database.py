@@ -12,7 +12,7 @@ class DatabaseSettings:
     connection_url: str = secret(
         default="mysql+aiomysql://blog_app:5678@127.0.0.1:3306/blog_app"
     )
-    echo_statements: bool = True
+    echo_statements: bool = False
 
 
 def create_metadata(settings: DatabaseSettings) -> Tuple[MetaData, ModelMap]:
@@ -30,5 +30,8 @@ def create_model_map(settings: DatabaseSettings) -> ModelMap:
 async def create_tables(settings: DatabaseSettings):
     metadata = create_metadata(settings)[0]
     engine: Any = metadata.bind
+
     async with engine.connect() as conn:
         await conn.run_sync(metadata.create_all)
+
+    await engine.dispose()

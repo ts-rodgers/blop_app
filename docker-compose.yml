@@ -9,7 +9,7 @@ services:
       MYSQL_USER: blog_app
       MYSQL_PASSWORD: 5678
     ports:
-      - 3306
+      - "3306:3306"
     volumes:
       - "mysql:/var/lib/mysql"
 
@@ -20,10 +20,11 @@ services:
     depends_on:
       - mysql
     volumes:
-      - "./blog-app.toml:/blog-app.toml"
-      # - "./blog_app:/blog_app"
-      # - "./tests:/tests"
-      # - "./cli:/cli"
+      - "./blog-app.toml:/blog-app/blog-app.toml"
+      # - "./blog_app:/blog-app/blog_app"
+      # - "./tests:/blog-app/tests"
+      # - "./cli:/blog-app/cli"
+    command: poetry run devtools server
 
 volumes:
   mysql:
