@@ -9,9 +9,21 @@ services:
       MYSQL_USER: blog_app
       MYSQL_PASSWORD: 5678
     ports:
-      - "3306:3306"
+      - 3306
     volumes:
       - "mysql:/var/lib/mysql"
+
+  blog_app:
+    build: .
+    ports:
+      - "8000:8000"
+    depends_on:
+      - mysql
+    volumes:
+      - "./blog-app.toml:/blog-app.toml"
+      # - "./blog_app:/blog_app"
+      # - "./tests:/tests"
+      # - "./cli:/cli"
 
 volumes:
   mysql:
