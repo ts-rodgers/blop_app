@@ -75,7 +75,7 @@ application root folder:
 
 ```
 python -m pip install -U pip poetry
-poetry install --no-dev
+poetry install
 ```
 
 Note that these instructions will isolate dependencies within a virtualenv,
