@@ -118,17 +118,17 @@ connection_url = "mysql+aiomysql://<mysql-user>:<mysql-password>@<mysql-host>:<m
 
 Make the following replacements:
 
-| Replacement                  | Description                                                                                    |
-|------------------------------|------------------------------------------------------------------------------------------------|
-| <auth0-domain>               | The *domain* from your Auth0 Regular Web Application                                           |
-| <auth0-client-id>            | Likewise, *client id*                                                                          |
-| <auth0-client-secret>        | ... the *client secret*                                                                        |
-| <auth0-management-api-token> | The temporary management API token that you generated                                          |
-| <mysql-host>                 | The hostname or ip address from which your MySQL instance can be reached                       |
-| <mysql-port>                 | The port number that MySQL listens on                                                          |
-| <mysql-database>             | The name of the database that you created for this application, hosted with the MySQL instance |
-| <mysql-user>                 | The user which has full access to the above database                                           |
-| <mysql-password>             | The password which authenticates the above user                                                |
+| Replacement                    | Description                                                                                    |
+|--------------------------------|------------------------------------------------------------------------------------------------|
+| `<auth0-domain>`               | The *domain* from your Auth0 Regular Web Application                                           |
+| `<auth0-client-id>`            | Likewise, *client id*                                                                          |
+| `<auth0-client-secret>`        | ... the *client secret*                                                                        |
+| `<auth0-management-api-token>` | The temporary management API token that you generated                                          |
+| `<mysql-host>`                 | The hostname or ip address from which your MySQL instance can be reached                       |
+| `<mysql-port>`                 | The port number that MySQL listens on                                                          |
+| `<mysql-database>`             | The name of the database that you created for this application, hosted with the MySQL instance |
+| `<mysql-user>`                 | The user which has full access to the above database                                           |
+| `<mysql-password>`             | The password which authenticates the above user                                                |
 
 (When running using the pre-configured `docker-compose.yml` configuration, the `<mysql-host>` would be `mysql`. The remaining
 `<mysql-*>` fields should be copied from the docker-compose configuration.)
