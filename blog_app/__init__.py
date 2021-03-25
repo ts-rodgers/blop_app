@@ -1,6 +1,6 @@
 import logging
 import traceback
-from typing import Any, List, Optional
+from typing import Any, AsyncGenerator, List, Optional, Union
 from starlette.types import Receive, Scope, Send
 
 import strawberry
@@ -11,12 +11,23 @@ from .adapters.auth0 import Auth0Authenticator
 from .auth.resolvers import send_login_code, login_with_code, refresh_login
 from .comments.resolvers import add_comment, update_comment, delete_comment
 from .comments.types import Comment
+from .events import (
+    Events,
+    Matcher,
+    CommentAddedEvent,
+    PostDeletedEvent,
+    PostUpdatedEvent,
+)
+from .events.demo_pubsub import DemoPubsub
 from .posts.resolvers import get_posts, create_post, update_post, delete_post
 from .reactions.resolvers import set_reaction, delete_reaction
 from .reactions.types import Reaction
 from .context import build_context
 from .database import create_model_map
 from .settings import load, Settings
+
+
+evts = Events()
 
 
 @strawberry.type
@@ -30,13 +41,30 @@ class Mutation:
     login_with_code = strawberry.field(login_with_code)
     refresh_login = strawberry.field(refresh_login)
     create_post = strawberry.field(create_post)
-    update_post = strawberry.field(update_post)
-    delete_post = strawberry.field(delete_post)
-    add_comment = strawberry.field(add_comment)
+    update_post = strawberry.field(evts.track(update_post, generating=PostUpdatedEvent))
+    delete_post = strawberry.field(evts.track(delete_post, generating=PostDeletedEvent))
+    add_comment = strawberry.field(
+        evts.track(add_comment, generating=CommentAddedEvent)
+    )
     update_comment = strawberry.field(update_comment)
     delete_comment = strawberry.field(delete_comment)
     set_reaction = strawberry.field(set_reaction)
     delete_reaction = strawberry.field(delete_reaction)
+
+
+@strawberry.type
+class Subscription:
+    @strawberry.subscription
+    def watch_post(
+        self, id: int
+    ) -> AsyncGenerator[
+        Union[PostUpdatedEvent, PostDeletedEvent, CommentAddedEvent], None
+    ]:
+        return evts.stream(
+            Matcher(PostUpdatedEvent, id=id),
+            Matcher(PostDeletedEvent, id=id),
+            Matcher(CommentAddedEvent, post_id=id),
+        )
 
 
 class BlogApp(GraphQL):
@@ -49,7 +77,12 @@ class BlogApp(GraphQL):
         additional_types = [Comment, Reaction]
         kwargs.setdefault(
             "schema",
-            strawberry.Schema(query=Query, mutation=Mutation, types=additional_types),
+            strawberry.Schema(
+                query=Query,
+                mutation=Mutation,
+                subscription=Subscription,
+                types=additional_types,
+            ),
         )
         super().__init__(**kwargs)
 
@@ -71,11 +104,16 @@ class BlogApp(GraphQL):
             await super().__call__(scope, receive, send)
 
     async def startup(self):
-        ...
+        # here is where we can set up a bonafide Pubsub
+        # adapter.
+        evts.pubsub = DemoPubsub()
 
     async def shutdown(self):
         # the same db engine is shared by all modules
         await self.model_map["post"].engine.dispose()
+
+        assert evts.pubsub is not None
+        await evts.pubsub.dispose()
 
     async def get_context(
         self, request: AppRequest, response: Optional[Any] = None
