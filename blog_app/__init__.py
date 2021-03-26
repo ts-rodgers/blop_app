@@ -22,22 +22,69 @@ from .settings import load, Settings
 
 @strawberry.type
 class Query:
-    posts = strawberry.field(get_posts)
+    posts = strawberry.field(
+        get_posts, description="Retreive a queryable collection of posts."
+    )
 
 
 @strawberry.type
 class Mutation:
-    send_login_code = strawberry.field(send_login_code)
-    login_with_code = strawberry.field(login_with_code)
-    refresh_login = strawberry.field(refresh_login)
-    create_post = strawberry.field(create_post)
-    update_post = strawberry.field(update_post)
-    delete_post = strawberry.field(delete_post)
-    add_comment = strawberry.field(add_comment)
-    update_comment = strawberry.field(update_comment)
-    delete_comment = strawberry.field(delete_comment)
-    set_reaction = strawberry.field(set_reaction)
-    delete_reaction = strawberry.field(delete_reaction)
+    # auth mutations
+    send_login_code = strawberry.field(
+        send_login_code,
+        description="Send a code to the provided email address, which can"
+        " be used with `loginWithCode` to authenticate.",
+    )
+    login_with_code = strawberry.field(
+        login_with_code,
+        description="Authenticate using a code that was sent to the"
+        " provided email address using `sendLoginCode`",
+    )
+    refresh_login = strawberry.field(
+        refresh_login,
+        description="Re-authenticate using the `refreshToken` from the last"
+        " authentication.",
+    )
+
+    # post mutations
+    create_post = strawberry.field(
+        create_post,
+        description="Create a new post" " with supplied `title` and `content`.",
+    )
+    update_post = strawberry.field(
+        update_post,
+        description="Update the post"
+        " with the given `id`, setting the `title` and `content` to new values"
+        " when provided.",
+    )
+    delete_post = strawberry.field(
+        delete_post,
+        description="Delete the post"
+        " with the given `id`. All attached comments (and reactions to those comments)"
+        " will also be deleted.",
+    )
+
+    # comment mutations
+    add_comment = strawberry.field(
+        add_comment, description="Add a comment to the post with the given `postId`."
+    )
+    update_comment = strawberry.field(
+        update_comment, description="Update the comment with the given `id`."
+    )
+    delete_comment = strawberry.field(
+        delete_comment, description="Remove the comment with the given `id`."
+    )
+
+    # reaction mutations
+    set_reaction = strawberry.field(
+        set_reaction,
+        description="Set a reaction to the comment with the given `commentId`."
+        " Any previously set reactions by the logged in user to the same comment"
+        " are removed.",
+    )
+    delete_reaction = strawberry.field(
+        delete_reaction, description="Delete the reaction with the given `id`."
+    )
 
 
 class BlogApp(GraphQL):
