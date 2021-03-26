@@ -12,6 +12,7 @@ from .auth.resolvers import send_login_code, login_with_code, refresh_login
 from .comments.resolvers import add_comment, update_comment, delete_comment
 from .comments.types import Comment
 from .posts.resolvers import get_posts, create_post, update_post, delete_post
+from .posts.types import Post
 from .reactions.resolvers import set_reaction, delete_reaction
 from .reactions.types import Reaction
 from .context import build_context
@@ -46,7 +47,7 @@ class BlogApp(GraphQL):
         # These are types that strawberry can't detect because they aren't returned
         # directly from any resolver.
 
-        additional_types = [Comment, Reaction]
+        additional_types = [Post, Comment, Reaction]
         kwargs.setdefault(
             "schema",
             strawberry.Schema(query=Query, mutation=Mutation, types=additional_types),
