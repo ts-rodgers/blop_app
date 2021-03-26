@@ -9,7 +9,7 @@ queries.
 
 The application is built to run on asynchronous Python 3.9, using a 
 Code-first approach to declaring GraphQL schemas 
-(see #strawberry-graphql/strawberry).
+(see https://github.com/strawberry-graphql/strawberry).
 
 Authentication is handled using **Auth0**, and users are logged in 
 using a passwordless email link. 
